@@ -24,6 +24,7 @@ builder.Services.AddDbContext<DbContext>(o => o.UseSqlServer(builder.Configurati
 builder.Services.AddControllers().AddNewtonsoftJson();
 
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IPlantManagementService, PlantManagementService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
