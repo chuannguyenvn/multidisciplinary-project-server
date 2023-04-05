@@ -27,8 +27,7 @@ builder.Services.AddQuartz(q =>
     q.AddTrigger(opts => opts
         .ForJob(jobKey)
         .WithIdentity("AdafruitDataLoggingJob-trigger")
-        .WithCronSchedule("0/5 * * * * ?"));
-
+        .WithCronSchedule(settings.AdafruitLoggingCron));
 });
 
 builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);

@@ -8,18 +8,20 @@ public class AdafruitDataLoggingJob : IJob
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly DbContext _dbContext;
+    private readonly Settings _settings;
 
-    public AdafruitDataLoggingJob(IHttpClientFactory httpClientFactory, DbContext dbContext)
+    public AdafruitDataLoggingJob(IHttpClientFactory httpClientFactory, DbContext dbContext, Settings settings)
     {
         _httpClientFactory = httpClientFactory;
         _dbContext = dbContext;
+        _settings = settings;
     }
 
     public async Task Execute(IJobExecutionContext context)
     {
         var client = _httpClientFactory.CreateClient();
         var response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Get,
-            "https://io.adafruit.com/api/v2/chuanpro030/groups/dadn?x-aio-key=aio_KCzC81tZz7MHjbpwdCz0lUVfiLfG"));
+            AdafruitHelper.GetAdafruitFeedLogApi(_settings.AdafruitUsername, _settings.AdafruitKey)));
 
         var feedLog = JsonConvert.DeserializeObject<AdafruitFeedLog>(await response.Content.ReadAsStringAsync());
 
@@ -34,7 +36,13 @@ public class AdafruitDataLoggingJob : IJob
 
         _dbContext.PlantLogs.Add(plantLog);
         await _dbContext.SaveChangesAsync();
-        
-        Console.WriteLine("Logged something from Adafruit.");
+    }
+}
+
+public static class AdafruitHelper
+{
+    public static string GetAdafruitFeedLogApi(string username, string key)
+    {
+        return "https://io.adafruit.com/api/v2/" + username + "/groups/dadn?x-aio-key=" + key;
     }
 }
