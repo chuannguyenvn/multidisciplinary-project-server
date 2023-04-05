@@ -5,9 +5,9 @@ namespace Server.Services;
 
 public interface IPlantManagementService
 {
-    public (bool success, object result) AddPlant(int ownerId, string name, byte[] photo);
+    public (bool success, object result) AddPlant(int ownerId, string name, string photo);
     public (bool success, string result) RemovePlant(int id);
-    public (bool success, string result) EditPlant(int id, string? newName = null, byte[]? newPhoto = null);
+    public (bool success, string result) EditPlant(int id, string? newName = null, string? newPhoto = null);
     public (bool success, object result) GetPlantByUser(int userId);
 }
 
@@ -22,14 +22,15 @@ public class PlantManagementService : IPlantManagementService
         _dbContext = dbContext;
     }
 
-    public (bool success, object result) AddPlant(int ownerId, string name, byte[] photo)
+    public (bool success, object result) AddPlant(int ownerId, string name, string photo)
     {
         // TODO: Add recognizer service.
         var plantInformation = new PlantInformation()
         {
             Name = name,
-            Photo = photo,
             CreatedDate = DateTime.Today,
+            Photo = photo,
+            RecognizerCode = "Test",
             Owner = _dbContext.Users.First(u => u.Id == ownerId)
         };
 
@@ -50,7 +51,7 @@ public class PlantManagementService : IPlantManagementService
         return (true, "");
     }
 
-    public (bool success, string result) EditPlant(int id, string? newName = null, byte[]? newPhoto = null)
+    public (bool success, string result) EditPlant(int id, string? newName = null, string? newPhoto = null)
     {
         if (!_dbContext.PlantInformations.Any(p => p.Id == id)) return (false, "Plant not found.");
 
@@ -65,7 +66,7 @@ public class PlantManagementService : IPlantManagementService
 
     public (bool success, object result) GetPlantByUser(int userId)
     {
-        var plantList = _dbContext.PlantInformations.Where(p => p.Owner.Id == userId).OrderBy(p => p.Id);
+        var plantList = _dbContext.PlantInformations.Where(p => p.Owner.Id == userId).OrderBy(p => p.Id).ToList();
         return (true, plantList);
     }
 }

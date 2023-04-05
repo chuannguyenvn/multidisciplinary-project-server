@@ -3,5 +3,5 @@
 public class PlantAdditionRequest
 {
     public string Name { get; set; }
-    public byte[] Photo { get; set; }
+    public string Photo { get; set; }
 }
