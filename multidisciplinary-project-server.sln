@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "multidisciplinary-project-server", "multidisciplinary-project-server\multidisciplinary-project-server.csproj", "{C02B7B0C-F48C-4508-8BE9-A15290870E27}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C02B7B0C-F48C-4508-8BE9-A15290870E27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C02B7B0C-F48C-4508-8BE9-A15290870E27}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C02B7B0C-F48C-4508-8BE9-A15290870E27}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C02B7B0C-F48C-4508-8BE9-A15290870E27}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
