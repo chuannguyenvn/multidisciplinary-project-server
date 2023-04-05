@@ -21,7 +21,7 @@ public class AdafruitDataLoggingJob : IJob
     {
         var client = _httpClientFactory.CreateClient();
         var response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Get,
-            AdafruitHelper.GetAdafruitFeedLogApi(_settings.AdafruitUsername, _settings.AdafruitKey)));
+            AdafruitConnectionHelper.GetAdafruitFeedLogApi(_settings.AdafruitUsername, _settings.AdafruitKey)));
 
         var feedLog = JsonConvert.DeserializeObject<AdafruitFeedLog>(await response.Content.ReadAsStringAsync());
 
@@ -39,10 +39,33 @@ public class AdafruitDataLoggingJob : IJob
     }
 }
 
-public static class AdafruitHelper
+public static class AdafruitConnectionHelper
 {
     public static string GetAdafruitFeedLogApi(string username, string key)
     {
         return "https://io.adafruit.com/api/v2/" + username + "/groups/dadn?x-aio-key=" + key;
     }
+}
+
+public static class AdafruitDataParser
+{
+    public static (AdafruitDataType, List<float>) ParseData(string data)
+    {
+        AdafruitDataType dataType = data[0] switch
+        {
+            'L' => AdafruitDataType.Light,
+            'T' => AdafruitDataType.Temperature,
+            'H' => AdafruitDataType.Humidity,
+            _ => throw new InvalidDataException(),
+        };
+
+        return (dataType, data[1..].Split(',').Select(float.Parse).ToList());
+    }
+}
+
+public enum AdafruitDataType
+{
+    Light,
+    Temperature,
+    Humidity,
 }
