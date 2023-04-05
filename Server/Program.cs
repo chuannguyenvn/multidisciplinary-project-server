@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Serialization;
+using Quartz;
 using Server;
 using Server.Models;
 using Server.Services;
+using Server.Tasks;
 using DbContext = Server.DbContext;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,10 +16,22 @@ var settings = new Settings();
 builder.Configuration.Bind("Settings", settings);
 builder.Services.AddSingleton(settings);
 
-// Add services to the container.
 builder.Services.AddHttpClient();
 
-// builder.Services.AddHostedService<TimedBackgroundService>();
+builder.Services.AddQuartz(q =>
+{
+    q.UseMicrosoftDependencyInjectionJobFactory();
+    var jobKey = new JobKey("AdafruitDataLoggingJob");
+    q.AddJob<AdafruitDataLoggingJob>(opts => opts.WithIdentity(jobKey));
+
+    q.AddTrigger(opts => opts
+        .ForJob(jobKey)
+        .WithIdentity("AdafruitDataLoggingJob-trigger")
+        .WithCronSchedule("0/5 * * * * ?"));
+
+});
+
+builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
 builder.Services.AddDbContext<DbContext>(o => o.UseSqlServer(builder.Configuration.GetConnectionString("Database")));
 
