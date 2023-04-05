@@ -51,13 +51,13 @@ public class PlantManagementService : IPlantManagementService
         return (true, "");
     }
 
-    public (bool success, string result) EditPlant(int id, string? newName = null, string? newPhoto = null)
+    public (bool success, string result) EditPlant(int id, string newName, string newPhoto)
     {
         if (!_dbContext.PlantInformations.Any(p => p.Id == id)) return (false, "Plant not found.");
 
-        var editingPlantInformation = new PlantInformation() {Id = id};
-        if (newName != null) editingPlantInformation.Name = newName;
-        if (newPhoto != null) editingPlantInformation.Photo = newPhoto;
+        var editingPlantInformation = _dbContext.PlantInformations.First(p => p.Id == id);
+        if (newName != "") editingPlantInformation.Name = newName;
+        if (newPhoto != "") editingPlantInformation.Photo = newPhoto;
         _dbContext.PlantInformations.Update(editingPlantInformation);
         _dbContext.SaveChanges();
 
