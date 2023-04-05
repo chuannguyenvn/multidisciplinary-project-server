@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "multidisciplinary-project-server", "multidisciplinary-project-server\multidisciplinary-project-server.csproj", "{C02B7B0C-F48C-4508-8BE9-A15290870E27}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{C02B7B0C-F48C-4508-8BE9-A15290870E27}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
