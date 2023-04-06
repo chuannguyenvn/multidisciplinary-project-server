@@ -11,4 +11,5 @@ public class Settings
     public string AdafruitTemperatureFeedName { get; set; }
     public string AdafruitMoistureFeedName { get; set; }
     public string AdafruitAnnounceFeedName { get; set; }
+    public string AdafruitSensorFeedName { get; set; }
 }

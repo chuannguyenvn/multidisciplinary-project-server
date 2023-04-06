@@ -20,19 +20,18 @@ public class AdafruitDataLoggingJob : IJob
     public async Task Execute(IJobExecutionContext context)
     {
         var client = _httpClientFactory.CreateClient();
-        var response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Get,
-            AdafruitConnectionHelper.GetAdafruitFeedLogApi(_settings.AdafruitUsername, _settings.AdafruitKey)));
+        var response = await client.SendAsync(AdafruitConnectionHelper.ConstructAdafruitSensorFeedRequest(
+            _settings.AdafruitUsername,
+            _settings.AdafruitKey,
+            _settings.AdafruitFeedName,
+            _settings.AdafruitSensorFeedName));
 
-        var feedLog = JsonConvert.DeserializeObject<AdafruitFeedLog>(await response.Content.ReadAsStringAsync());
-        var feeds = feedLog.feeds;
+        var responseContent = await response.Content.ReadAsStringAsync();
 
+        var feedLog = JsonConvert.DeserializeObject<List<AdafruitFeedLog>>(responseContent);
         var plantLog = new PlantLog()
         {
-            LightValue = float.Parse(feeds.First(f => f.name == _settings.AdafruitLightFeedName).last_value),
-            TemperatureValue = float.Parse(feeds.First(f => f.name == _settings.AdafruitTemperatureFeedName).last_value),
-            MoistureValue = float.Parse(feeds.First(f => f.name == _settings.AdafruitMoistureFeedName).last_value),
-            Timestamp = DateTime.Now,
-            PlantInformation = _dbContext.PlantInformations.ToList()[0],
+            Type = feedLog[0].Value[0], Timestamp = DateTime.Now, ValueString = feedLog[0].Value[2..],
         };
 
         _dbContext.PlantLogs.Add(plantLog);
@@ -42,25 +41,46 @@ public class AdafruitDataLoggingJob : IJob
 
 public static class AdafruitConnectionHelper
 {
-    public static string GetAdafruitFeedLogApi(string username, string key)
+    private const string DOMAIN = "https://io.adafruit.com/api/v2/";
+
+    public static string ConstructFeedKey(string groupName, string feedName)
     {
-        return "https://io.adafruit.com/api/v2/" + username + "/groups/dadn?x-aio-key=" + key;
+        return groupName + "." + feedName;
+    }
+
+    public static string ConstructIoKey(string key)
+    {
+        return "?x-aio-key=" + key;
+    }
+
+    public static HttpRequestMessage ConstructAdafruitGroupRequest(string username, string ioKey, string feedName)
+    {
+        return new HttpRequestMessage(HttpMethod.Get,
+            DOMAIN + username + "/groups/" + feedName + ConstructIoKey(ioKey));
+    }
+
+    public static HttpRequestMessage ConstructAdafruitSensorFeedRequest(string username, string ioKey, string feedName,
+        string sensorFeedName)
+    {
+        return new HttpRequestMessage(HttpMethod.Get,
+            DOMAIN + username + "/feeds/" + ConstructFeedKey(feedName, sensorFeedName) + "/data?limit=1" +
+            ConstructIoKey(ioKey));
     }
 }
 
 public static class AdafruitDataParser
 {
-    public static (AdafruitDataType, List<float>) ParseData(string data)
+    public static (AdafruitDataType, List<float>) ParseSensorData(string data)
     {
         AdafruitDataType dataType = data[0] switch
         {
             'L' => AdafruitDataType.Light,
             'T' => AdafruitDataType.Temperature,
-            'H' => AdafruitDataType.Humidity,
+            'M' => AdafruitDataType.Humidity,
             _ => throw new InvalidDataException(),
         };
 
-        return (dataType, data[1..].Split(',').Select(float.Parse).ToList());
+        return (dataType, data[2..].Split(';').Select(float.Parse).ToList());
     }
 }
 

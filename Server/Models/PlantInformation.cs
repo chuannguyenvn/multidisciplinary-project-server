@@ -9,5 +9,4 @@ public class PlantInformation
     public string RecognizerCode { get; set; }
 
     public User Owner { get; set; }
-    public List<PlantLog> PlantLogs { get; set; }
 }
