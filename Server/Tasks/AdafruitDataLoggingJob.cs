@@ -24,12 +24,13 @@ public class AdafruitDataLoggingJob : IJob
             AdafruitConnectionHelper.GetAdafruitFeedLogApi(_settings.AdafruitUsername, _settings.AdafruitKey)));
 
         var feedLog = JsonConvert.DeserializeObject<AdafruitFeedLog>(await response.Content.ReadAsStringAsync());
+        var feeds = feedLog.feeds;
 
         var plantLog = new PlantLog()
         {
-            LightValue = float.Parse(feedLog.feeds.First(feed => feed.name == "light").last_value),
-            TemperatureValue = float.Parse(feedLog.feeds.First(feed => feed.name == "temperature").last_value),
-            MoistureValue = float.Parse(feedLog.feeds.First(feed => feed.name == "moisture").last_value),
+            LightValue = float.Parse(feeds.First(f => f.name == _settings.AdafruitLightFeedName).last_value),
+            TemperatureValue = float.Parse(feeds.First(f => f.name == _settings.AdafruitTemperatureFeedName).last_value),
+            MoistureValue = float.Parse(feeds.First(f => f.name == _settings.AdafruitMoistureFeedName).last_value),
             Timestamp = DateTime.Now,
             PlantInformation = _dbContext.PlantInformations.ToList()[0],
         };
