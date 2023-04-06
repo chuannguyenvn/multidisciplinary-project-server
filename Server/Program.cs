@@ -7,7 +7,7 @@ using Quartz;
 using Server;
 using Server.Models;
 using Server.Services;
-using Server.Tasks;
+using Server.Jobs;
 using DbContext = Server.DbContext;
 
 var builder = WebApplication.CreateBuilder(args);

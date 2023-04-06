@@ -2,7 +2,7 @@
 using Quartz;
 using Server.Models;
 
-namespace Server.Tasks;
+namespace Server.Jobs;
 
 public class AdafruitDataLoggingJob : IJob
 {
