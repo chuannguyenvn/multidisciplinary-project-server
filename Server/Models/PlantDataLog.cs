@@ -1,6 +1,6 @@
 ﻿namespace Server.Models;
 
-public class PlantLog
+public class PlantDataLog
 {
     public int Id { get; set; }
     public char Type { get; set; }

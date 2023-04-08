@@ -27,7 +27,7 @@ public class AdafruitDataLoggingJob : IJob
         var response = await client.SendAsync(_httpMessageCreationService.CreateAdafruitSensorFeedRequest());
         var responseContent = await response.Content.ReadAsStringAsync();
         var feedLog = JsonConvert.DeserializeObject<List<AdafruitFeedLog>>(responseContent);
-        var plantLog = new PlantLog()
+        var plantLog = new PlantDataLog()
         {
             Type = feedLog[0].Value[0], Timestamp = DateTime.Now, ValueString = feedLog[0].Value[2..],
         };

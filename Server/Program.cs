@@ -39,6 +39,7 @@ builder.Services.AddControllers().AddNewtonsoftJson();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IPlantManagementService, PlantManagementService>();
 builder.Services.AddScoped<HttpMessageCreationService>();
+builder.Services.AddScoped<PlantDataService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
