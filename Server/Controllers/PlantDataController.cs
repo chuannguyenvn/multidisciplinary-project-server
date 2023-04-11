@@ -18,7 +18,7 @@ public class PlantDataController : ControllerBase
     }
 
     [HttpGet("{plantId}")]
-    public IActionResult GetLatestPlantData([FromHeader] int plantId)
+    public IActionResult GetLatestPlantData([FromRoute] int plantId)
     {
         var response = _plantDataService.GetLatestPlantData(plantId);
         return Ok(response);
