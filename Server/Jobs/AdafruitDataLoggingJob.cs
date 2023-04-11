@@ -11,52 +11,93 @@ public class AdafruitDataLoggingJob : IJob
     private readonly DbContext _dbContext;
     private readonly Settings _settings;
     private readonly HttpMessageCreationService _httpMessageCreationService;
+    private readonly AdafruitMqttService _adafruitMqttService;
 
-    public AdafruitDataLoggingJob(IHttpClientFactory httpClientFactory, DbContext dbContext, Settings settings,
-        HttpMessageCreationService httpMessageCreationService)
+    private List<AccumulatedPlantDataLog> _accumulatedPlantDataLogs = new();
+    private DateTime _accumulatorStartTime = DateTime.Now;
+
+    public AdafruitDataLoggingJob(IHttpClientFactory httpClientFactory, DbContext dbContext, Settings settings, HttpMessageCreationService httpMessageCreationService,
+        AdafruitMqttService adafruitMqttService)
     {
         _httpClientFactory = httpClientFactory;
         _dbContext = dbContext;
         _settings = settings;
         _httpMessageCreationService = httpMessageCreationService;
+        _adafruitMqttService = adafruitMqttService;
+
+        _adafruitMqttService.SensorMessageReceived += SensorMessageReceivedHandler;
+    }
+
+    private void SensorMessageReceivedHandler(string content)
+    {
+        var feedLog = JsonConvert.DeserializeObject<AdafruitFeedLog>(content);
+        if (feedLog == null) throw new Exception("Cannot deserialize sensor message: \n" + content);
+        AccumulateNewValues(feedLog);
+        Console.WriteLine("Accumulating");
     }
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var feedLogs = await RetrieveFeedLog();
-
-        try
+        if (_accumulatedPlantDataLogs.Count == 0)
         {
-            CreatePlantDataLogs(feedLogs);
+            Console.WriteLine("WARNING: The server did not accumulate any log in the last timespan (" + _accumulatorStartTime + " to " + DateTime.Now + ").");
+            return;
         }
-        catch
+
+        foreach (var accumulatedPlantDataLog in _accumulatedPlantDataLogs)
         {
-            Console.WriteLine("WARNING: Creating plant logs failed the first time. Retrying in " +
-                              _settings.AdafruitRetryWaitTimerSeconds + " seconds...");
+            var ownerPlant = _dbContext.PlantInformations.FirstOrDefault(info => info.Id == accumulatedPlantDataLog.PlantId);
+            if (ownerPlant == null) continue;
 
-            await Task.Delay(_settings.AdafruitRetryWaitTimerSeconds);
-
-            try
+            _dbContext.PlantDataLogs.Add(new PlantDataLog()
             {
-                CreatePlantDataLogs(feedLogs);
-            }
-            catch
-            {
-                Console.WriteLine("WARNING: Creating plant logs failed two times in a row.");
-            }
+                Timestamp = DateTime.Now,
+                LightValue = accumulatedPlantDataLog.AveragedLightValue,
+                TemperatureValue = accumulatedPlantDataLog.AveragedTemperatureValue,
+                MoistureValue = accumulatedPlantDataLog.AveragedMoistureValue,
+                Owner = ownerPlant,
+            });
         }
+
+        await _dbContext.SaveChangesAsync();
+
+        _accumulatedPlantDataLogs = new();
+        _accumulatorStartTime = DateTime.Now;
     }
 
-    private async Task<List<AdafruitFeedLog>> RetrieveFeedLog()
+    private void AccumulateNewValues(AdafruitFeedLog feedLog)
     {
-        var client = _httpClientFactory.CreateClient();
-        var response = await client.SendAsync(_httpMessageCreationService.CreateAdafruitSensorFeedRequest(10));
-        var responseContent = await response.Content.ReadAsStringAsync();
-        var feedLogs = JsonConvert.DeserializeObject<List<AdafruitFeedLog>>(responseContent);
+        var values = feedLog.Value[2..].Split(';').Select(float.Parse).ToList();
 
-        if (feedLogs == null) throw new Exception("Feed log not received.");
+        if (values.Count > _accumulatedPlantDataLogs.Count)
+        {
+            for (int i = _accumulatedPlantDataLogs.Count; i < values.Count; i++)
+            {
+                _accumulatedPlantDataLogs.Add(new AccumulatedPlantDataLog()
+                {
+                    PlantId = _dbContext.PlantInformations.ToList()[i].Id,
+                });
+            }
+        }
 
-        return feedLogs;
+        for (var i = 0; i < values.Count; i++)
+        {
+            switch (feedLog.Value[0])
+            {
+                case 'L':
+                    _accumulatedPlantDataLogs[i].AccumulatedLightValue += values[i];
+                    _accumulatedPlantDataLogs[i].LightValueCount++;
+                    break;
+                case 'T':
+                    _accumulatedPlantDataLogs[i].AccumulatedTemperatureValue += values[i];
+                    _accumulatedPlantDataLogs[i].TemperatureValueCount++;
+                    break;
+                case 'M':
+                    _accumulatedPlantDataLogs[i].AccumulatedMoistureValue += values[i];
+                    _accumulatedPlantDataLogs[i].MoistureValueCount++;
+                    break;
+            }
+        }
     }
 
     private void CreatePlantDataLogs(List<AdafruitFeedLog> feedLogs)

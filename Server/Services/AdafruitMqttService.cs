@@ -9,7 +9,8 @@ using Server.Services;
 
 public class AdafruitMqttService : IHostedService
 {
-    public event Action<string, string> MessageReceived;
+    public event Action<string> AnnounceMessageReceived;
+    public event Action<string> SensorMessageReceived;
 
     private readonly Settings _settings;
     private readonly HelperService _helperService;
@@ -30,9 +31,15 @@ public class AdafruitMqttService : IHostedService
         _mqttClient.ApplicationMessageReceivedAsync += ApplicationMessageReceivedHandler;
         await _mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
+        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
+            .WithTopicFilter(f => { f.WithTopic(_helperService.AnnounceTopicPath); })
+            .WithTopicFilter(f => { f.WithTopic(_helperService.SensorTopicPath); })
+            .WithTopicFilter(f => { f.WithTopic("Leo2308/feeds/dadn.test2"); })
+            .Build();
 
-        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter(f => { f.WithTopic("Leo2308/feeds/dadn.test2"); }).Build();
         await _mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+
+        Console.WriteLine("AdafruitMqttService initialized successfully.");
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -48,7 +55,10 @@ public class AdafruitMqttService : IHostedService
 
     private Task ApplicationMessageReceivedHandler(MqttApplicationMessageReceivedEventArgs args)
     {
-        MessageReceived?.Invoke(args.ApplicationMessage.Topic, HelperService.DecodeBase64(args.ApplicationMessage.Payload));
+        var decodedMessage = HelperService.DecodeBase64(args.ApplicationMessage.Payload);
+        if (args.ApplicationMessage.Topic.Contains(_settings.AdafruitAnnounceFeedName)) AnnounceMessageReceived?.Invoke(decodedMessage);
+        else if (args.ApplicationMessage.Topic.Contains(_settings.AdafruitSensorFeedName)) SensorMessageReceived?.Invoke(decodedMessage);
+
         Console.WriteLine("Message received");
         return Task.CompletedTask;
     }

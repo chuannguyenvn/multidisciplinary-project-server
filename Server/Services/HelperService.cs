@@ -18,6 +18,7 @@ public class HelperService
     }
 
     public string AnnounceTopicPath => _settings.AdafruitUsername + "/feeds/" + _settings.AdafruitFeedName + "." + _settings.AdafruitAnnounceFeedName;
+    public string SensorTopicPath => _settings.AdafruitUsername + "/feeds/" + _settings.AdafruitFeedName + "." + _settings.AdafruitSensorFeedName;
 
     public string ConstructAddNewPlantMessage(int plantId)
     {
