@@ -1,6 +1,6 @@
 ﻿namespace Communications.Responses;
 
-public class PlantAdditionResponse
+public class AddPlantResponse
 {
     public string RecognizerCode { get; set; }
 }

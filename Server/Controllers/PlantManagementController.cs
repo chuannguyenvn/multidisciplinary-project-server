@@ -21,14 +21,14 @@ public class PlantManagementController : ControllerBase
     }
 
     [HttpPost("add")]
-    public IActionResult AddPlant(PlantAdditionRequest plantAdditionRequest)
+    public IActionResult AddPlant(AddPlantRequest addPlantRequest)
     {
-        var (success, result) = _plantManagementService.AddPlant(int.Parse(User.FindFirst("id").Value), plantAdditionRequest.Name, plantAdditionRequest.Photo);
+        var (success, result) = _plantManagementService.AddPlant(int.Parse(User.FindFirst("id").Value), addPlantRequest.Name, addPlantRequest.Photo);
         if (!success) return BadRequest(result);
         return Ok(result);
     }
 
-    [HttpPost("{id}/remove")]
+    [HttpGet("{id}/remove")]
     public IActionResult RemovePlant([FromRoute] int id)
     {
         var (success, result) = _plantManagementService.RemovePlant(id);
@@ -37,9 +37,9 @@ public class PlantManagementController : ControllerBase
     }
 
     [HttpPost("{id}/edit")]
-    public IActionResult EditPlant([FromRoute] int id, PlantEditRequest plantEditRequest)
+    public IActionResult EditPlant([FromRoute] int id, EditPlantRequest editPlantRequest)
     {
-        var (success, result) = _plantManagementService.EditPlant(id, plantEditRequest.NewName, plantEditRequest.NewPhoto);
+        var (success, result) = _plantManagementService.EditPlant(id, editPlantRequest.NewName, editPlantRequest.NewPhoto);
         if (!success) return BadRequest(result);
         return Ok(result);
     }

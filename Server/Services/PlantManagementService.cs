@@ -1,4 +1,5 @@
-﻿using Server.Models;
+﻿using Communications.Responses;
+using Server.Models;
 
 
 namespace Server.Services;
@@ -36,7 +37,7 @@ public class PlantManagementService : IPlantManagementService
 
         _dbContext.PlantInformations.Add(plantInformation);
         _dbContext.SaveChanges();
-        
+
         return (true, "");
     }
 
@@ -66,7 +67,11 @@ public class PlantManagementService : IPlantManagementService
 
     public (bool success, object result) GetPlantByUser(int userId)
     {
-        var plantList = _dbContext.PlantInformations.Where(p => p.Owner.Id == userId).OrderBy(p => p.Id).ToList();
-        return (true, plantList);
+        var plantGetResponse = new GetPlantResponse()
+        {
+            PlantInformations = _dbContext.PlantInformations.Where(p => p.Owner.Id == userId).OrderBy(p => p.Id).ToList(),
+        };
+
+        return (true, plantGetResponse);
     }
 }
