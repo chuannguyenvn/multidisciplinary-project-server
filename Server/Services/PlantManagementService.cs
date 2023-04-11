@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Server.Models;
+﻿using Server.Models;
+
 
 namespace Server.Services;
 
@@ -13,13 +13,15 @@ public interface IPlantManagementService
 
 public class PlantManagementService : IPlantManagementService
 {
-    private readonly Settings _settings;
     private readonly DbContext _dbContext;
+    private readonly AdafruitMqttService _adafruitMqttService;
+    private readonly HelperService _helperService;
 
-    public PlantManagementService(Settings settings, DbContext dbContext)
+    public PlantManagementService(DbContext dbContext, AdafruitMqttService adafruitMqttService, HelperService helperService)
     {
-        _settings = settings;
         _dbContext = dbContext;
+        _adafruitMqttService = adafruitMqttService;
+        _helperService = helperService;
     }
 
     public (bool success, object result) AddPlant(int ownerId, string name, string photo)
@@ -36,6 +38,8 @@ public class PlantManagementService : IPlantManagementService
 
         _dbContext.PlantInformations.Add(plantInformation);
         _dbContext.SaveChanges();
+
+        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructAddNewPlantMessage(plantInformation.Id));
 
         return (true, "");
     }

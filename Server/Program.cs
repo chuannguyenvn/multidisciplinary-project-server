@@ -37,7 +37,9 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IPlantManagementService, PlantManagementService>();
 builder.Services.AddScoped<HttpMessageCreationService>();
 builder.Services.AddScoped<PlantDataService>();
-builder.Services.AddHostedService<AdafruitMQTTService>();
+builder.Services.AddSingleton<AdafruitMqttService>();
+builder.Services.AddHostedService<AdafruitMqttService>(provider => provider.GetService<AdafruitMqttService>());
+builder.Services.AddSingleton<HelperService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
