@@ -11,5 +11,5 @@ public class DbContext : Microsoft.EntityFrameworkCore.DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<PlantInformation> PlantInformations { get; set; }
-    public DbSet<PlantDataLog> PlantLogs { get; set; }
+    public DbSet<PlantDataLog> PlantDataLogs { get; set; }
 }

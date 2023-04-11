@@ -4,6 +4,7 @@ public class Settings
 {
     public string BearerKey { get; set; }
     public string AdafruitLoggingCron { get; set; }
+    public int AdafruitRetryWaitTimerSeconds { get; set; }
     public string AdafruitUsername { get; set; }
     public string AdafruitKey { get; set; }
     public string AdafruitFeedName { get; set; }

@@ -24,10 +24,11 @@ public class HttpMessageCreationService
         return new HttpRequestMessage(HttpMethod.Get, DOMAIN + username + "/groups/" + feedName + IoKey);
     }
 
-    public HttpRequestMessage CreateAdafruitSensorFeedRequest()
+    public HttpRequestMessage CreateAdafruitSensorFeedRequest(int entryCount)
     {
         return new HttpRequestMessage(HttpMethod.Get,
             DOMAIN + _settings.AdafruitUsername + "/feeds/" +
-            ConstructFeedKey(_settings.AdafruitFeedName, _settings.AdafruitSensorFeedName) + "/data?limit=1" + IoKey);
+            ConstructFeedKey(_settings.AdafruitFeedName, _settings.AdafruitSensorFeedName) + "/data?limit=" +
+            entryCount + IoKey);
     }
 }
