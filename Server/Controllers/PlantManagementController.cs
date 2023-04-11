@@ -23,34 +23,24 @@ public class PlantManagementController : ControllerBase
     [HttpPost("add")]
     public IActionResult AddPlant(PlantAdditionRequest plantAdditionRequest)
     {
-        var (success, result) = _plantManagementService.AddPlant(int.Parse(User.FindFirst("id").Value),
-            plantAdditionRequest.Name,
-            plantAdditionRequest.Photo);
-
+        var (success, result) = _plantManagementService.AddPlant(int.Parse(User.FindFirst("id").Value), plantAdditionRequest.Name, plantAdditionRequest.Photo);
         if (!success) return BadRequest(result);
-
         return Ok(result);
     }
 
-    [HttpPost("remove/{id}")]
+    [HttpPost("{id}/remove")]
     public IActionResult RemovePlant([FromRoute] int id)
     {
         var (success, result) = _plantManagementService.RemovePlant(id);
-
         if (!success) return BadRequest(result);
-
         return Ok(result);
     }
 
-    [HttpPost("edit/{id}")]
+    [HttpPost("{id}/edit")]
     public IActionResult EditPlant([FromRoute] int id, PlantEditRequest plantEditRequest)
     {
-        // BUG: Potentially erase fields.
-        var (success, result) =
-            _plantManagementService.EditPlant(id, plantEditRequest.NewName, plantEditRequest.NewPhoto);
-
+        var (success, result) = _plantManagementService.EditPlant(id, plantEditRequest.NewName, plantEditRequest.NewPhoto);
         if (!success) return BadRequest(result);
-
         return Ok(result);
     }
 
@@ -58,6 +48,7 @@ public class PlantManagementController : ControllerBase
     public IActionResult GetPlantByUser()
     {
         var (success, result) = _plantManagementService.GetPlantByUser(int.Parse(User.FindFirst("id").Value));
+        if (!success) return BadRequest(result);
         return Ok(result);
     }
 }
