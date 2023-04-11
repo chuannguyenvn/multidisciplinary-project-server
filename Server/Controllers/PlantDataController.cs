@@ -17,10 +17,27 @@ public class PlantDataController : ControllerBase
         _plantDataService = plantDataService;
     }
 
-    [HttpGet("{plantId}")]
-    public IActionResult GetLatestPlantData([FromRoute] int plantId)
+    [HttpGet("{plantId}/latest")]
+    public IActionResult GetLatestData([FromRoute] int plantId)
     {
-        var response = _plantDataService.GetLatestPlantData(plantId);
-        return Ok(response);
+        var (success, content) = _plantDataService.GetLatestData(plantId);
+        if (!success) return BadRequest(content);
+        return Ok(content);
+    }
+
+    [HttpGet("{plantId}/lasthour")]
+    public IActionResult GetLastHourData([FromRoute] int plantId)
+    {
+        var (success, content) = _plantDataService.GetLastHourData(plantId);
+        if (!success) return BadRequest(content);
+        return Ok(content);
+    }
+
+    [HttpGet("{plantId}/last24hours")]
+    public IActionResult GetLast24HoursData([FromRoute] int plantId)
+    {
+        var (success, content) = _plantDataService.GetLast24HoursData(plantId);
+        if (!success) return BadRequest(content);
+        return Ok(content);
     }
 }

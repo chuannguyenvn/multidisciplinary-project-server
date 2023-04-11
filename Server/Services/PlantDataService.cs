@@ -11,16 +11,80 @@ public class PlantDataService
         _dbContext = dbContext;
     }
 
-    public PlantLatestDataResponse GetLatestPlantData(int plantId)
+    public (bool success, object content) GetLatestData(int plantId)
     {
-        var plantInformation = _dbContext.PlantInformations.First(info => info.Id == plantId);
-        var plantLog = _dbContext.PlantDataLogs.First(log => log.Owner == plantInformation);
+        if (!DoesPlantIdExist(plantId)) return (false, "Plant ID does not exist.");
+        if (!DoesPlantHaveAnyLog(plantId)) return (false, "Plant does not have any log.");
 
-        return new PlantLatestDataResponse()
+        var plantLog = _dbContext.PlantDataLogs.OrderByDescending(log => log.Timestamp).Last(log => log.Owner.Id == plantId);
+
+        return (true, new PlantDataResponse()
         {
-            LightValue = plantLog.LightValue,
-            TemperatureValue = plantLog.TemperatureValue,
-            MoistureValue = plantLog.MoistureValue,
-        };
+            PlantDataRange = PlantDataRange.Latest,
+            PlantDataPoints = new List<PlantDataPoint>()
+            {
+                new PlantDataPoint()
+                {
+                    Timestamp = plantLog.Timestamp,
+                    LightValue = plantLog.LightValue,
+                    TemperatureValue = plantLog.TemperatureValue,
+                    MoistureValue = plantLog.MoistureValue,
+                }
+            },
+        });
+    }
+
+    public (bool success, object content) GetLastHourData(int plantId)
+    {
+        if (!DoesPlantIdExist(plantId)) return (false, "Plant ID does not exist.");
+        if (!DoesPlantHaveAnyLog(plantId)) return (false, "Plant does not have any log.");
+
+        var plantLogs = _dbContext.PlantDataLogs.Where(log => log.Owner.Id == plantId && log.Timestamp > DateTime.Now.AddHours(-1)).OrderByDescending(log => log.Timestamp);
+
+        var plantDataPoints = new List<PlantDataPoint>();
+        foreach (var plantLog in plantLogs)
+        {
+            plantDataPoints.Add(new PlantDataPoint()
+            {
+                Timestamp = plantLog.Timestamp,
+                LightValue = plantLog.LightValue,
+                TemperatureValue = plantLog.TemperatureValue,
+                MoistureValue = plantLog.MoistureValue,
+            });
+        }
+
+        return (true, new PlantDataResponse() {PlantDataRange = PlantDataRange.LastHour, PlantDataPoints = plantDataPoints});
+    }
+
+    public (bool success, object content) GetLast24HoursData(int plantId)
+    {
+        if (!DoesPlantIdExist(plantId)) return (false, "Plant ID does not exist.");
+        if (!DoesPlantHaveAnyLog(plantId)) return (false, "Plant does not have any log.");
+
+        var plantLogs = _dbContext.PlantDataLogs.Where(log => log.Owner.Id == plantId && log.Timestamp > DateTime.Now.AddHours(-24)).OrderByDescending(log => log.Timestamp);
+
+        var plantDataPoints = new List<PlantDataPoint>();
+        foreach (var plantLog in plantLogs)
+        {
+            plantDataPoints.Add(new PlantDataPoint()
+            {
+                Timestamp = plantLog.Timestamp,
+                LightValue = plantLog.LightValue,
+                TemperatureValue = plantLog.TemperatureValue,
+                MoistureValue = plantLog.MoistureValue,
+            });
+        }
+
+        return (true, new PlantDataResponse() {PlantDataRange = PlantDataRange.Last24Hours, PlantDataPoints = plantDataPoints});
+    }
+
+    private bool DoesPlantIdExist(int plantId)
+    {
+        return _dbContext.PlantInformations.Any(info => info.Id == plantId);
+    }
+
+    private bool DoesPlantHaveAnyLog(int plantId)
+    {
+        return _dbContext.PlantDataLogs.Any(log => log.Owner.Id == plantId);
     }
 }
