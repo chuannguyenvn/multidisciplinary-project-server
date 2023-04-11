@@ -99,45 +99,4 @@ public class AdafruitDataLoggingJob : IJob
             }
         }
     }
-
-    private void CreatePlantDataLogs(List<AdafruitFeedLog> feedLogs)
-    {
-        AdafruitFeedLog latestLightLog;
-        AdafruitFeedLog latestTemperatureLog;
-        AdafruitFeedLog latestMoistureLog;
-
-        try
-        {
-            latestLightLog = feedLogs.First(log => log.Value[0] == 'L');
-            latestTemperatureLog = feedLogs.First(log => log.Value[0] == 'T');
-            latestMoistureLog = feedLogs.First(log => log.Value[0] == 'M');
-        }
-        catch
-        {
-            throw new Exception("Some type of feed log is missing.");
-        }
-
-        var lightValues = latestLightLog.Value[2..].Split(';').Select(float.Parse).ToList();
-        var temperatureValues = latestTemperatureLog.Value[2..].Split(';').Select(float.Parse).ToList();
-        var moistureValues = latestMoistureLog.Value[2..].Split(';').Select(float.Parse).ToList();
-
-        if (feedLogs.Count != _dbContext.PlantInformations.Count())
-            Console.WriteLine("WARNING: Plant count and log count mismatch.");
-
-        for (int i = 0; i < int.Min(feedLogs.Count, _dbContext.PlantInformations.Count()); i++)
-        {
-            var plantLog = new PlantDataLog()
-            {
-                Timestamp = DateTime.Now,
-                LightValue = lightValues[i],
-                TemperatureValue = temperatureValues[i],
-                MoistureValue = moistureValues[i],
-                Owner = _dbContext.PlantInformations.ToList()[i],
-            };
-
-            _dbContext.PlantDataLogs.Add(plantLog);
-        }
-
-        _dbContext.SaveChanges();
-    }
 }

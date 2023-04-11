@@ -55,7 +55,8 @@ public class AdafruitMqttService : IHostedService
 
     private Task ApplicationMessageReceivedHandler(MqttApplicationMessageReceivedEventArgs args)
     {
-        var decodedMessage = HelperService.DecodeBase64(args.ApplicationMessage.Payload);
+        var decodedMessage = _helperService.DecodeMqttPayload(args.ApplicationMessage.Payload);
+        Console.WriteLine("From topic: " + args.ApplicationMessage.Topic);
         if (args.ApplicationMessage.Topic.Contains(_settings.AdafruitAnnounceFeedName)) AnnounceMessageReceived?.Invoke(decodedMessage);
         else if (args.ApplicationMessage.Topic.Contains(_settings.AdafruitSensorFeedName)) SensorMessageReceived?.Invoke(decodedMessage);
 

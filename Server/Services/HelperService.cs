@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.Json;
 using Server.Models;
 
 namespace Server.Services;
@@ -12,9 +13,9 @@ public class HelperService
         _settings = settings;
     }
 
-    public static string DecodeBase64(byte[] encodedData)
+    public string DecodeMqttPayload(byte[] encodedData)
     {
-        return Encoding.UTF8.GetString(Convert.FromBase64String(Encoding.UTF8.GetString(encodedData)));
+        return Convert.ToBase64String(encodedData);
     }
 
     public string AnnounceTopicPath => _settings.AdafruitUsername + "/feeds/" + _settings.AdafruitFeedName + "." + _settings.AdafruitAnnounceFeedName;
