@@ -14,13 +14,11 @@ public interface IPlantManagementService
 public class PlantManagementService : IPlantManagementService
 {
     private readonly DbContext _dbContext;
-    private readonly AdafruitMqttService _adafruitMqttService;
     private readonly HelperService _helperService;
 
-    public PlantManagementService(DbContext dbContext, AdafruitMqttService adafruitMqttService, HelperService helperService)
+    public PlantManagementService(DbContext dbContext, HelperService helperService)
     {
         _dbContext = dbContext;
-        _adafruitMqttService = adafruitMqttService;
         _helperService = helperService;
     }
 
@@ -38,9 +36,7 @@ public class PlantManagementService : IPlantManagementService
 
         _dbContext.PlantInformations.Add(plantInformation);
         _dbContext.SaveChanges();
-
-        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructAddNewPlantMessage(plantInformation.Id));
-
+        
         return (true, "");
     }
 

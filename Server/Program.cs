@@ -7,7 +7,6 @@ using Quartz;
 using Server;
 using Server.Models;
 using Server.Services;
-using Server.Jobs;
 using DbContext = Server.DbContext;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,17 +17,6 @@ builder.Services.AddSingleton(settings);
 
 builder.Services.AddHttpClient();
 
-builder.Services.AddQuartz(q =>
-{
-    q.UseMicrosoftDependencyInjectionJobFactory();
-
-    var jobKey = new JobKey("AdafruitDataLoggingJob");
-    q.AddJob<AdafruitDataLoggingJob>(opts => opts.WithIdentity(jobKey));
-    q.AddTrigger(opts => opts.ForJob(jobKey).WithIdentity("AdafruitDataLoggingJob-trigger").WithCronSchedule(settings.AdafruitLoggingCron));
-});
-
-builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
-
 builder.Services.AddDbContext<DbContext>(o => o.UseSqlServer(builder.Configuration.GetConnectionString("Database")));
 
 builder.Services.AddControllers().AddNewtonsoftJson();
@@ -37,8 +25,7 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IPlantManagementService, PlantManagementService>();
 builder.Services.AddScoped<HttpMessageCreationService>();
 builder.Services.AddScoped<PlantDataService>();
-builder.Services.AddSingleton<AdafruitMqttService>();
-builder.Services.AddHostedService<AdafruitMqttService>(provider => provider.GetService<AdafruitMqttService>());
+builder.Services.AddHostedService<AdafruitMqttService>();
 builder.Services.AddSingleton<HelperService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

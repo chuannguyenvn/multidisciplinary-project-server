@@ -15,7 +15,8 @@ public class HelperService
 
     public string DecodeMqttPayload(byte[] encodedData)
     {
-        return Convert.ToBase64String(encodedData);
+        var base64EncodedBytes = Convert.FromBase64String(Convert.ToBase64String(encodedData));
+        return Encoding.UTF8.GetString(base64EncodedBytes);
     }
 
     public string AnnounceTopicPath => _settings.AdafruitUsername + "/feeds/" + _settings.AdafruitFeedName + "." + _settings.AdafruitAnnounceFeedName;
