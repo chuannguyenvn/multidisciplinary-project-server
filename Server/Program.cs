@@ -21,13 +21,10 @@ builder.Services.AddHttpClient();
 builder.Services.AddQuartz(q =>
 {
     q.UseMicrosoftDependencyInjectionJobFactory();
+
     var jobKey = new JobKey("AdafruitDataLoggingJob");
     q.AddJob<AdafruitDataLoggingJob>(opts => opts.WithIdentity(jobKey));
-
-    q.AddTrigger(opts => opts
-        .ForJob(jobKey)
-        .WithIdentity("AdafruitDataLoggingJob-trigger")
-        .WithCronSchedule(settings.AdafruitLoggingCron));
+    q.AddTrigger(opts => opts.ForJob(jobKey).WithIdentity("AdafruitDataLoggingJob-trigger").WithCronSchedule(settings.AdafruitLoggingCron));
 });
 
 builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
@@ -40,6 +37,7 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IPlantManagementService, PlantManagementService>();
 builder.Services.AddScoped<HttpMessageCreationService>();
 builder.Services.AddScoped<PlantDataService>();
+builder.Services.AddHostedService<AdafruitMQTTService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
