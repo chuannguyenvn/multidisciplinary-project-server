@@ -51,4 +51,12 @@ public class PlantManagementController : ControllerBase
         if (!success) return BadRequest(result);
         return Ok(result);
     }
+
+    [HttpGet("{id}/water")]
+    public IActionResult WaterPlant([FromRoute] int id)
+    {
+        var (success, result) = _plantManagementService.WaterPlant(id);
+        if (!success) return BadRequest(result);
+        return Ok(result);
+    }
 }

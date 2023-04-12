@@ -7,9 +7,10 @@ namespace Server.Services;
 public interface IPlantManagementService
 {
     public (bool success, object result) AddPlant(int ownerId, string name, string photo);
-    public (bool success, string result) RemovePlant(int id);
-    public (bool success, string result) EditPlant(int id, string? newName = null, string? newPhoto = null);
+    public (bool success, string result) RemovePlant(int plantId);
+    public (bool success, string result) EditPlant(int plantId, string? newName = null, string? newPhoto = null);
     public (bool success, object result) GetPlantByUser(int userId);
+    public (bool success, object result) WaterPlant(int plantId);
 }
 
 public class PlantManagementService : IPlantManagementService
@@ -41,22 +42,22 @@ public class PlantManagementService : IPlantManagementService
         return (true, "");
     }
 
-    public (bool success, string result) RemovePlant(int id)
+    public (bool success, string result) RemovePlant(int plantId)
     {
-        if (!_dbContext.PlantInformations.Any(p => p.Id == id)) return (false, "Plant not found.");
+        if (!_dbContext.PlantInformations.Any(p => p.Id == plantId)) return (false, "Plant not found.");
 
-        var removingPlantInformation = new PlantInformation() {Id = id};
+        var removingPlantInformation = new PlantInformation() {Id = plantId};
         _dbContext.PlantInformations.Remove(removingPlantInformation);
         _dbContext.SaveChanges();
 
         return (true, "");
     }
 
-    public (bool success, string result) EditPlant(int id, string newName, string newPhoto)
+    public (bool success, string result) EditPlant(int plantId, string newName, string newPhoto)
     {
-        if (!_dbContext.PlantInformations.Any(p => p.Id == id)) return (false, "Plant not found.");
+        if (!_dbContext.PlantInformations.Any(p => p.Id == plantId)) return (false, "Plant not found.");
 
-        var editingPlantInformation = _dbContext.PlantInformations.First(p => p.Id == id);
+        var editingPlantInformation = _dbContext.PlantInformations.First(p => p.Id == plantId);
         if (newName != "") editingPlantInformation.Name = newName;
         if (newPhoto != "") editingPlantInformation.Photo = newPhoto;
         _dbContext.PlantInformations.Update(editingPlantInformation);
@@ -83,5 +84,10 @@ public class PlantManagementService : IPlantManagementService
         };
 
         return (true, plantGetResponse);
+    }
+
+    public (bool success, object result) WaterPlant(int plantId)
+    {
+        return (true, null);
     }
 }
