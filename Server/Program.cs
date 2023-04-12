@@ -20,7 +20,7 @@ builder.Services.AddControllers().AddNewtonsoftJson();
 
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IPlantManagementService, PlantManagementService>();
-builder.Services.AddScoped<PlantDataService>();
+builder.Services.AddScoped<IPlantDataService, PlantDataService>();
 builder.Services.AddHostedService<AdafruitMqttService>();
 builder.Services.AddSingleton<HelperService>();
 

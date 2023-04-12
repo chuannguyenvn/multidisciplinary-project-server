@@ -9,9 +9,9 @@ namespace Server.Controllers;
 [Route("[controller]")]
 public class PlantDataController : ControllerBase
 {
-    private readonly PlantDataService _plantDataService;
+    private readonly IPlantDataService _plantDataService;
 
-    public PlantDataController(PlantDataService plantDataService)
+    public PlantDataController(IPlantDataService plantDataService)
     {
         _plantDataService = plantDataService;
     }

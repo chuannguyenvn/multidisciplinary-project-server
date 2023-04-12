@@ -2,7 +2,14 @@
 
 namespace Server.Services;
 
-public class PlantDataService
+public interface IPlantDataService
+{
+    public (bool success, object content) GetLatestData(int plantId);
+    public (bool success, object content) GetLastHourData(int plantId);
+    public (bool success, object content) GetLast24HoursData(int plantId);
+}
+
+public class PlantDataService : IPlantDataService
 {
     private readonly DbContext _dbContext;
 
