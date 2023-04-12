@@ -175,6 +175,8 @@ public class AdafruitMqttService : BackgroundService
 
     public async Task<bool> TryWaitForAnnounceMessage(string message)
     {
+        AnnounceMessageQueue.RemoveAll(s => s == message);
+
         List<int> trialTimers = new() {1000, 2000, 3000};
 
         foreach (var trialTimer in trialTimers)
@@ -182,7 +184,7 @@ public class AdafruitMqttService : BackgroundService
             await Task.Delay(trialTimer);
 
             Console.WriteLine("Waited for " + trialTimer / 1000 + " seconds.");
-            
+
             if (AnnounceMessageQueue.Contains(message))
             {
                 Console.WriteLine("Waited message found and dequeued.");
