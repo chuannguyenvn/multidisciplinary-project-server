@@ -41,6 +41,8 @@ public class PlantManagementService : IPlantManagementService
         _dbContext.PlantInformations.Add(plantInformation);
         _dbContext.SaveChanges();
 
+        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructAddNewPlantMessage(plantInformation.Id));
+
         return (true, "");
     }
 
@@ -51,6 +53,8 @@ public class PlantManagementService : IPlantManagementService
         var removingPlantInformation = new PlantInformation() {Id = plantId};
         _dbContext.PlantInformations.Remove(removingPlantInformation);
         _dbContext.SaveChanges();
+
+        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructRemovePlantMessage(plantId));
 
         return (true, "");
     }

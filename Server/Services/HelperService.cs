@@ -28,6 +28,11 @@ public class HelperService
     {
         return plantId + ";N";
     }
+    
+    public string ConstructRemovePlantMessage(int plantId)
+    {
+        return plantId + ";R";
+    }
 
     public string ConstructWaterPlantMessage(int plantId)
     {
