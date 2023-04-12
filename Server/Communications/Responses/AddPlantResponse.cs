@@ -1,6 +1,9 @@
-﻿namespace Communications.Responses;
+﻿using Newtonsoft.Json;
 
-public class AddPlantResponse
+namespace Communications.Responses
 {
-    public string RecognizerCode { get; set; }
+    public class AddPlantResponse
+    {
+        [JsonProperty("RecognizerCode")] public string RecognizerCode { get; set; }
+    }
 }

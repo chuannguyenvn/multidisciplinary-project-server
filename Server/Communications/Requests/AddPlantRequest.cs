@@ -1,7 +1,10 @@
-﻿namespace Communications.Requests;
+﻿using Newtonsoft.Json;
 
-public class AddPlantRequest
+namespace Communications.Requests
 {
-    public string Name { get; set; }
-    public string Photo { get; set; }
+    public class AddPlantRequest
+    {
+        [JsonProperty("Name")] public string Name { get; set; }
+        [JsonProperty("Photo")] public string Photo { get; set; }
+    }
 }

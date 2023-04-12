@@ -69,7 +69,17 @@ public class PlantManagementService : IPlantManagementService
     {
         var plantGetResponse = new GetPlantResponse()
         {
-            PlantInformations = _dbContext.PlantInformations.Where(p => p.Owner.Id == userId).OrderBy(p => p.Id).ToList(),
+            PlantInformations = _dbContext.PlantInformations.Where(p => p.Owner.Id == userId)
+                .OrderBy(p => p.Id)
+                .Select(info => new GetPlantResponseUnit()
+                {
+                    Id = info.Id,
+                    Name = info.Name,
+                    CreatedDate = info.CreatedDate,
+                    Photo = info.Photo,
+                    RecognizerCode = info.RecognizerCode,
+                })
+                .ToList(),
         };
 
         return (true, plantGetResponse);

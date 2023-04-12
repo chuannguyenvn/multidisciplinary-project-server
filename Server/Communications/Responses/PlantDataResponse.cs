@@ -1,22 +1,25 @@
-﻿namespace Communications.Responses;
+﻿using Newtonsoft.Json;
 
-public class PlantDataResponse
+namespace Communications.Responses
 {
-    public PlantDataRange PlantDataRange { get; set; }
-    public List<PlantDataPoint> PlantDataPoints { get; set; }
-}
+    public class PlantDataResponse
+    {
+        [JsonProperty("PlantDataRange")] public PlantDataRange PlantDataRange { get; set; }
+        [JsonProperty("PlantDataPoints")] public List<PlantDataPoint> PlantDataPoints { get; set; }
+    }
 
-public class PlantDataPoint
-{
-    public DateTime Timestamp { get; set; }
-    public float LightValue { get; set; }
-    public float TemperatureValue { get; set; }
-    public float MoistureValue { get; set; }
-}
+    public class PlantDataPoint
+    {
+        [JsonProperty("Timestamp")] public DateTime Timestamp { get; set; }
+        [JsonProperty("LightValue")] public float LightValue { get; set; }
+        [JsonProperty("TemperatureValue")] public float TemperatureValue { get; set; }
+        [JsonProperty("MoistureValue")] public float MoistureValue { get; set; }
+    }
 
-public enum PlantDataRange
-{
-    Latest,
-    LastHour,
-    Last24Hours,
+    public enum PlantDataRange
+    {
+        Latest,
+        LastHour,
+        Last24Hours,
+    }
 }

@@ -1,7 +1,10 @@
-﻿namespace Communications.Requests;
+﻿using Newtonsoft.Json;
 
-public class AuthenticationRequest
+namespace Communications.Requests
 {
-    public string Username { get; set; }
-    public string Password { get; set; }
+    public class AuthenticationRequest
+    {
+        [JsonProperty("Username")] public string Username { get; set; }
+        [JsonProperty("Password")] public string Password { get; set; }
+    }
 }

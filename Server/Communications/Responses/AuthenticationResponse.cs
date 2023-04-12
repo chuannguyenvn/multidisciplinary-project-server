@@ -1,6 +1,9 @@
-﻿namespace Communications.Responses;
+﻿using Newtonsoft.Json;
 
-public class AuthenticationResponse
+namespace Communications.Responses
 {
-    public string Token { get; set; }
+    public class AuthenticationResponse
+    {
+        [JsonProperty("Token")] public string Token { get; set; }
+    }
 }
