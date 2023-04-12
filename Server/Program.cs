@@ -21,7 +21,10 @@ builder.Services.AddControllers().AddNewtonsoftJson();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IPlantManagementService, PlantManagementService>();
 builder.Services.AddScoped<IPlantDataService, PlantDataService>();
-builder.Services.AddHostedService<AdafruitMqttService>();
+
+builder.Services.AddSingleton<AdafruitMqttService>();
+builder.Services.AddHostedService<AdafruitMqttService>(p => p.GetRequiredService<AdafruitMqttService>());
+
 builder.Services.AddSingleton<HelperService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

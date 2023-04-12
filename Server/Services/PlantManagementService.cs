@@ -17,11 +17,13 @@ public class PlantManagementService : IPlantManagementService
 {
     private readonly DbContext _dbContext;
     private readonly HelperService _helperService;
+    private readonly AdafruitMqttService _adafruitMqttService;
 
-    public PlantManagementService(DbContext dbContext, HelperService helperService)
+    public PlantManagementService(DbContext dbContext, HelperService helperService, AdafruitMqttService adafruitMqttService)
     {
         _dbContext = dbContext;
         _helperService = helperService;
+        _adafruitMqttService = adafruitMqttService;
     }
 
     public (bool success, object result) AddPlant(int ownerId, string name, string photo)
@@ -88,6 +90,7 @@ public class PlantManagementService : IPlantManagementService
 
     public (bool success, object result) WaterPlant(int plantId)
     {
+        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructWaterPlantMessage(plantId));
         return (true, null);
     }
 }
