@@ -17,7 +17,7 @@ public class AdafruitMqttService : BackgroundService
     private IMqttClient _mqttClient;
 
     private List<AccumulatedPlantDataLog> _accumulatedPlantDataLogs = new();
-    private DateTime _accumulatorStartTime = DateTime.Now;
+    private string _accumulatorStartTimeString = DateTime.Now.ToString();
 
     public AdafruitMqttService(Settings settings, HelperService helperService, IServiceScopeFactory serviceScopeFactory)
     {
@@ -63,7 +63,7 @@ public class AdafruitMqttService : BackgroundService
         {
             if (_accumulatedPlantDataLogs.Count == 0)
             {
-                Console.WriteLine("WARNING: The server did not accumulate any log in the last timespan (" + _accumulatorStartTime + " to " + DateTime.Now + ").");
+                Console.WriteLine("WARNING: The server did not accumulate any log in the last timespan (" + _accumulatorStartTimeString + " to " + DateTime.Now + ").");
                 continue;
             }
 
@@ -89,7 +89,7 @@ public class AdafruitMqttService : BackgroundService
                 await dbContext.SaveChangesAsync(stoppingToken);
 
                 _accumulatedPlantDataLogs = new();
-                _accumulatorStartTime = DateTime.Now;
+                _accumulatorStartTimeString = DateTime.Now.ToString();
             }
         }
     }
