@@ -71,6 +71,14 @@ public class AdafruitMqttService : BackgroundService
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
 
+                var averagedLightValue = _accumulatedPlantDataLogs.Average(log => log.AveragedLightValue);
+                var averagedTemperatureValue = _accumulatedPlantDataLogs.Average(log => log.AveragedTemperatureValue);
+                var averagedMoistureValue = _accumulatedPlantDataLogs.Average(log => log.AveragedMoistureValue);
+
+                PublishMessage(_helperService.LightTopicPath, averagedLightValue.ToString("0.00"));
+                PublishMessage(_helperService.TemperatureTopicPath, averagedTemperatureValue.ToString("0.00"));
+                PublishMessage(_helperService.MoistureTopicPath, averagedMoistureValue.ToString("0.00"));
+
                 foreach (var accumulatedPlantDataLog in _accumulatedPlantDataLogs)
                 {
                     var ownerPlant = dbContext.PlantInformations.FirstOrDefault(info => info.Id == accumulatedPlantDataLog.PlantId);
