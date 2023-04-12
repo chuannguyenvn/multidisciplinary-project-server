@@ -10,7 +10,7 @@ public interface IPlantManagementService
     public (bool success, string result) RemovePlant(int plantId);
     public (bool success, string result) EditPlant(int plantId, string? newName = null, string? newPhoto = null);
     public (bool success, object result) GetPlantByUser(int userId);
-    public (bool success, object result) WaterPlant(int plantId);
+    public Task<(bool success, object result)> WaterPlant(int plantId);
 }
 
 public class PlantManagementService : IPlantManagementService
@@ -41,7 +41,7 @@ public class PlantManagementService : IPlantManagementService
         _dbContext.PlantInformations.Add(plantInformation);
         _dbContext.SaveChanges();
 
-        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructAddNewPlantMessage(plantInformation.Id));
+        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructAddNewPlantRequestMessage(plantInformation.Id));
 
         return (true, "");
     }
@@ -54,7 +54,7 @@ public class PlantManagementService : IPlantManagementService
         _dbContext.PlantInformations.Remove(removingPlantInformation);
         _dbContext.SaveChanges();
 
-        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructRemovePlantMessage(plantId));
+        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructRemovePlantRequestMessage(plantId));
 
         return (true, "");
     }
@@ -92,9 +92,11 @@ public class PlantManagementService : IPlantManagementService
         return (true, plantGetResponse);
     }
 
-    public (bool success, object result) WaterPlant(int plantId)
+    public async Task<(bool success, object result)> WaterPlant(int plantId)
     {
-        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructWaterPlantMessage(plantId));
-        return (true, null);
+        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructWaterPlantRequestMessage(plantId));
+        var result = await _adafruitMqttService.TryWaitForAnnounceMessage(_helperService.ConstructWaterPlantResponseMessage(plantId));
+        var message = result ? "Plant watered." : "Adafruit did not response to watering request.";
+        return (result, message);
     }
 }

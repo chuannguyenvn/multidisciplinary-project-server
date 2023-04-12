@@ -50,9 +50,9 @@ public class PlantManagementController : ControllerBase
     }
 
     [HttpGet("{id}/water")]
-    public IActionResult WaterPlant([FromRoute] int id)
+    public async Task<IActionResult> WaterPlant([FromRoute] int id)
     {
-        var (success, result) = _plantManagementService.WaterPlant(id);
+        var (success, result) = await _plantManagementService.WaterPlant(id);
         if (!success) return BadRequest(result);
         return Ok(result);
     }

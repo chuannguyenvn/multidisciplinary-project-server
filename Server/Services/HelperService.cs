@@ -24,18 +24,33 @@ public class HelperService
     public string TemperatureTopicPath => _settings.AdafruitUsername + "/feeds/" + _settings.AdafruitFeedName + "." + _settings.AdafruitTemperatureFeedName;
     public string MoistureTopicPath => _settings.AdafruitUsername + "/feeds/" + _settings.AdafruitFeedName + "." + _settings.AdafruitMoistureFeedName;
 
-    public string ConstructAddNewPlantMessage(int plantId)
+    public string ConstructAddNewPlantRequestMessage(int plantId)
     {
         return plantId + ";N";
     }
-    
-    public string ConstructRemovePlantMessage(int plantId)
+
+    public string ConstructAddNewPlantResponseMessage(int plantId)
+    {
+        return plantId + ";ND";
+    }
+
+    public string ConstructRemovePlantRequestMessage(int plantId)
     {
         return plantId + ";R";
     }
 
-    public string ConstructWaterPlantMessage(int plantId)
+    public string ConstructRemovePlantResponseMessage(int plantId)
+    {
+        return plantId + ";RD";
+    }
+
+    public string ConstructWaterPlantRequestMessage(int plantId)
     {
         return plantId + ";W";
+    }
+
+    public string ConstructWaterPlantResponseMessage(int plantId)
+    {
+        return plantId + ";WD";
     }
 }

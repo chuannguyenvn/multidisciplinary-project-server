@@ -7,6 +7,8 @@ using Server.Services;
 
 public class AdafruitMqttService : BackgroundService
 {
+    public List<string> AnnounceMessageQueue = new();
+
     private readonly Settings _settings;
     private readonly HelperService _helperService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -107,17 +109,28 @@ public class AdafruitMqttService : BackgroundService
     {
         var decodedMessage = _helperService.DecodeMqttPayload(args.ApplicationMessage.Payload);
         Console.WriteLine("From topic: " + args.ApplicationMessage.Topic);
-        SensorMessageReceivedHandler(decodedMessage);
 
-        Console.WriteLine("Message received");
+        if (args.ApplicationMessage.Topic.Contains(_settings.AdafruitAnnounceFeedName))
+            AnnounceMessageReceivedHandler(decodedMessage);
+        else if (args.ApplicationMessage.Topic.Contains(_settings.AdafruitSensorFeedName))
+            SensorMessageReceivedHandler(decodedMessage);
+
+        Console.WriteLine("Message received: " + decodedMessage);
         return Task.CompletedTask;
+    }
+
+    private void AnnounceMessageReceivedHandler(string content)
+    {
+        if (content[^1] == 'D')
+        {
+            Console.WriteLine("Announce completion message queued.");
+            AnnounceMessageQueue.Add(content);
+        }
     }
 
     private void SensorMessageReceivedHandler(string content)
     {
-        Console.WriteLine(content);
         AccumulateNewValues(content);
-        Console.WriteLine("Accumulating");
     }
 
     private void AccumulateNewValues(string content)
@@ -158,5 +171,26 @@ public class AdafruitMqttService : BackgroundService
                     break;
             }
         }
+    }
+
+    public async Task<bool> TryWaitForAnnounceMessage(string message)
+    {
+        List<int> trialTimers = new() {1000, 2000, 3000};
+
+        foreach (var trialTimer in trialTimers)
+        {
+            await Task.Delay(trialTimer);
+
+            Console.WriteLine("Waited for " + trialTimer / 1000 + " seconds.");
+            
+            if (AnnounceMessageQueue.Contains(message))
+            {
+                Console.WriteLine("Waited message found and dequeued.");
+                AnnounceMessageQueue.Remove(message);
+                return true;
+            }
+        }
+
+        return false;
     }
 }
