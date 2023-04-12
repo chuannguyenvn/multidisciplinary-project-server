@@ -2,9 +2,6 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json.Serialization;
-using Quartz;
-using Server;
 using Server.Models;
 using Server.Services;
 using DbContext = Server.DbContext;
@@ -23,7 +20,6 @@ builder.Services.AddControllers().AddNewtonsoftJson();
 
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IPlantManagementService, PlantManagementService>();
-builder.Services.AddScoped<HttpMessageCreationService>();
 builder.Services.AddScoped<PlantDataService>();
 builder.Services.AddHostedService<AdafruitMqttService>();
 builder.Services.AddSingleton<HelperService>();
@@ -41,11 +37,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-}
 
 app.UseHttpsRedirection();
 

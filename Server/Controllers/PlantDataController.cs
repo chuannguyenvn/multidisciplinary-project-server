@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Server.Services;
 
@@ -10,7 +9,7 @@ namespace Server.Controllers;
 [Route("[controller]")]
 public class PlantDataController : ControllerBase
 {
-    private PlantDataService _plantDataService;
+    private readonly PlantDataService _plantDataService;
 
     public PlantDataController(PlantDataService plantDataService)
     {

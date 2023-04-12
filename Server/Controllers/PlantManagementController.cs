@@ -1,9 +1,6 @@
-﻿using System.Security.Claims;
-using Communications.Requests;
-using Communications.Responses;
+﻿using Communications.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using Server.Services;
 
 namespace Server.Controllers;
