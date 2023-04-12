@@ -18,17 +18,17 @@ public class PlantManagementController : ControllerBase
     }
 
     [HttpPost("add")]
-    public IActionResult AddPlant(AddPlantRequest addPlantRequest)
+    public async Task<IActionResult> AddPlant(AddPlantRequest addPlantRequest)
     {
-        var (success, result) = _plantManagementService.AddPlant(int.Parse(User.FindFirst("id").Value), addPlantRequest.Name, addPlantRequest.Photo);
+        var (success, result) = await _plantManagementService.AddPlant(int.Parse(User.FindFirst("id").Value), addPlantRequest.Name, addPlantRequest.Photo);
         if (!success) return BadRequest(result);
         return Ok(result);
     }
 
     [HttpGet("{id}/remove")]
-    public IActionResult RemovePlant([FromRoute] int id)
+    public async Task<IActionResult> RemovePlant([FromRoute] int id)
     {
-        var (success, result) = _plantManagementService.RemovePlant(id);
+        var (success, result) = await _plantManagementService.RemovePlant(id);
         if (!success) return BadRequest(result);
         return Ok(result);
     }

@@ -6,8 +6,8 @@ namespace Server.Services;
 
 public interface IPlantManagementService
 {
-    public (bool success, object result) AddPlant(int ownerId, string name, string photo);
-    public (bool success, string result) RemovePlant(int plantId);
+    public Task<(bool success, object result)> AddPlant(int ownerId, string name, string photo);
+    public Task<(bool success, string result)> RemovePlant(int plantId);
     public (bool success, string result) EditPlant(int plantId, string? newName = null, string? newPhoto = null);
     public (bool success, object result) GetPlantByUser(int userId);
     public Task<(bool success, object result)> WaterPlant(int plantId);
@@ -26,8 +26,14 @@ public class PlantManagementService : IPlantManagementService
         _adafruitMqttService = adafruitMqttService;
     }
 
-    public (bool success, object result) AddPlant(int ownerId, string name, string photo)
+    public async Task<(bool success, object result)> AddPlant(int ownerId, string name, string photo)
     {
+        var newPlantId = _dbContext.PlantInformations.OrderBy(info => info.Id).Last().Id + 1;
+        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructAddNewPlantRequestMessage(newPlantId));
+        var success = await _adafruitMqttService.TryWaitForAnnounceMessage(_helperService.ConstructAddNewPlantResponseMessage(newPlantId));
+        var message = success ? "Plant added." : "Adafruit did not response to the addition request.";
+        if (!success) return (false, message);
+
         // TODO: Add recognizer service.
         var plantInformation = new PlantInformation()
         {
@@ -35,28 +41,29 @@ public class PlantManagementService : IPlantManagementService
             CreatedDate = DateTime.Today,
             Photo = photo,
             RecognizerCode = "Test",
-            Owner = _dbContext.Users.First(u => u.Id == ownerId)
+            Owner = _dbContext.Users.First(u => u.Id == ownerId),
         };
 
         _dbContext.PlantInformations.Add(plantInformation);
         _dbContext.SaveChanges();
 
-        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructAddNewPlantRequestMessage(plantInformation.Id));
-
-        return (true, "");
+        return (true, message);
     }
 
-    public (bool success, string result) RemovePlant(int plantId)
+    public async Task<(bool success, string result)> RemovePlant(int plantId)
     {
         if (!_dbContext.PlantInformations.Any(p => p.Id == plantId)) return (false, "Plant not found.");
+
+        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructRemovePlantRequestMessage(plantId));
+        var success = await _adafruitMqttService.TryWaitForAnnounceMessage(_helperService.ConstructRemovePlantResponseMessage(plantId));
+        var message = success ? "Plant removed." : "Adafruit did not response to the removal request.";
+        if (!success) return (false, message);
 
         var removingPlantInformation = new PlantInformation() {Id = plantId};
         _dbContext.PlantInformations.Remove(removingPlantInformation);
         _dbContext.SaveChanges();
 
-        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructRemovePlantRequestMessage(plantId));
-
-        return (true, "");
+        return (true, message);
     }
 
     public (bool success, string result) EditPlant(int plantId, string newName, string newPhoto)
