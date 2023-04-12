@@ -7,9 +7,6 @@ using Server.Services;
 
 public class AdafruitMqttService : BackgroundService
 {
-    public event Action<string> AnnounceMessageReceived;
-    public event Action<string> SensorMessageReceived;
-
     private readonly Settings _settings;
     private readonly HelperService _helperService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -46,8 +43,6 @@ public class AdafruitMqttService : BackgroundService
         await _mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
 
         Console.WriteLine("AdafruitMqttService initialized successfully.");
-
-        SensorMessageReceived += SensorMessageReceivedHandler;
     }
 
     public async override Task StopAsync(CancellationToken cancellationToken)
@@ -112,7 +107,7 @@ public class AdafruitMqttService : BackgroundService
     {
         var decodedMessage = _helperService.DecodeMqttPayload(args.ApplicationMessage.Payload);
         Console.WriteLine("From topic: " + args.ApplicationMessage.Topic);
-        SensorMessageReceived?.Invoke(decodedMessage);
+        SensorMessageReceivedHandler(decodedMessage);
 
         Console.WriteLine("Message received");
         return Task.CompletedTask;
