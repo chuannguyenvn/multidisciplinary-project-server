@@ -7,6 +7,7 @@ public class PlantInformation
     public DateTime CreatedDate { get; set; }
     public string Photo { get; set; }
     public string RecognizerCode { get; set; }
+    public string WateringRule { get; set; }
 
     public User Owner { get; set; }
 }

@@ -36,7 +36,7 @@ public class PlantManagementController : ControllerBase
     [HttpPost("{id}/edit")]
     public IActionResult EditPlant([FromRoute] int id, EditPlantRequest editPlantRequest)
     {
-        var (success, result) = _plantManagementService.EditPlant(id, editPlantRequest.NewName, editPlantRequest.NewPhoto);
+        var (success, result) = _plantManagementService.EditPlant(id, editPlantRequest.NewName, editPlantRequest.NewPhoto, editPlantRequest.NewWateringRule);
         if (!success) return BadRequest(result);
         return Ok(result);
     }

@@ -8,7 +8,7 @@ public interface IPlantManagementService
 {
     public Task<(bool success, object result)> AddPlant(int ownerId, string name, string photo);
     public Task<(bool success, string result)> RemovePlant(int plantId);
-    public (bool success, string result) EditPlant(int plantId, string? newName = null, string? newPhoto = null);
+    public (bool success, string result) EditPlant(int plantId, string newName = "", string newPhoto = "", string newWateringRule = "");
     public (bool success, object result) GetPlantByUser(int userId);
     public Task<(bool success, object result)> WaterPlant(int plantId);
 }
@@ -28,7 +28,10 @@ public class PlantManagementService : IPlantManagementService
 
     public async Task<(bool success, object result)> AddPlant(int ownerId, string name, string photo)
     {
-        var newPlantId = _dbContext.PlantInformations.OrderBy(info => info.Id).Last().Id + 1;
+        var newPlantId = 1;
+        if (_dbContext.PlantInformations.Any())
+            newPlantId = _dbContext.PlantInformations.OrderBy(info => info.Id).Last().Id + 1;
+
         _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructAddNewPlantRequestMessage(newPlantId));
         var success = await _adafruitMqttService.TryWaitForAnnounceMessage(_helperService.ConstructAddNewPlantResponseMessage(newPlantId));
         var message = success ? "Plant added." : "Adafruit did not response to the addition request.";
@@ -41,6 +44,7 @@ public class PlantManagementService : IPlantManagementService
             CreatedDate = DateTime.Today,
             Photo = photo,
             RecognizerCode = "Test",
+            WateringRule = "",
             Owner = _dbContext.Users.First(u => u.Id == ownerId),
         };
 
@@ -66,13 +70,14 @@ public class PlantManagementService : IPlantManagementService
         return (true, message);
     }
 
-    public (bool success, string result) EditPlant(int plantId, string newName, string newPhoto)
+    public (bool success, string result) EditPlant(int plantId, string newName = "", string newPhoto = "", string newWateringRule = "")
     {
         if (!_dbContext.PlantInformations.Any(p => p.Id == plantId)) return (false, "Plant not found.");
 
         var editingPlantInformation = _dbContext.PlantInformations.First(p => p.Id == plantId);
         if (newName != "") editingPlantInformation.Name = newName;
         if (newPhoto != "") editingPlantInformation.Photo = newPhoto;
+        if (newWateringRule != "") editingPlantInformation.WateringRule = newWateringRule;
         _dbContext.PlantInformations.Update(editingPlantInformation);
         _dbContext.SaveChanges();
 
@@ -101,9 +106,21 @@ public class PlantManagementService : IPlantManagementService
 
     public async Task<(bool success, object result)> WaterPlant(int plantId)
     {
+        if (!_dbContext.PlantInformations.Any(p => p.Id == plantId)) return (false, "Plant not found.");
+
         _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructWaterPlantRequestMessage(plantId));
-        var result = await _adafruitMqttService.TryWaitForAnnounceMessage(_helperService.ConstructWaterPlantResponseMessage(plantId));
-        var message = result ? "Plant watered." : "Adafruit did not response to watering request.";
-        return (result, message);
+        var success = await _adafruitMqttService.TryWaitForAnnounceMessage(_helperService.ConstructWaterPlantResponseMessage(plantId));
+        if (!success) return (false, "Adafruit did not response to watering request.");
+
+        var plantWaterLog = new PlantWaterLog()
+        {
+            Timestamp = DateTime.Now,
+            WateredPlant = _dbContext.PlantInformations.First(info => info.Id == plantId),
+            IsManual = true,
+        };
+
+        _dbContext.PlantWaterLogs.Add(plantWaterLog);
+        _dbContext.SaveChanges();
+        return (true, "Plant watered.");
     }
 }
