@@ -25,7 +25,17 @@ public class PlantDataService : IPlantDataService
         if (!DoesPlantHaveAnyDataLog(plantId)) return (false, "Plant does not have any log.");
 
         var latestPlantLog = _dbContext.PlantDataLogs.OrderBy(log => log.Timestamp).Last(log => log.Owner.Id == plantId);
-        var latestWaterLog = _dbContext.PlantWaterLogs.OrderBy(log => log.Timestamp).Last(log => log.WateredPlant.Id == plantId);
+        var plantWaterLogList = new List<PlantWaterPoint>();
+
+        if (_dbContext.PlantWaterLogs.Any(log => log.WateredPlant.Id == plantId))
+        {
+            var latestWaterLog = _dbContext.PlantWaterLogs.OrderBy(log => log.Timestamp).Last(log => log.WateredPlant.Id == plantId);
+            plantWaterLogList.Add(new PlantWaterPoint()
+            {
+                Timestamp = latestWaterLog.Timestamp,
+                IsManual = latestWaterLog.IsManual,
+            });
+        }
 
         return (true, new PlantDataResponse()
         {
@@ -40,14 +50,7 @@ public class PlantDataService : IPlantDataService
                     MoistureValue = latestPlantLog.MoistureValue,
                 },
             },
-            PlantWaterPoints = new List<PlantWaterPoint>()
-            {
-                new PlantWaterPoint()
-                {
-                    Timestamp = latestWaterLog.Timestamp,
-                    IsManual = latestWaterLog.IsManual,
-                },
-            },
+            PlantWaterPoints = plantWaterLogList,
         });
     }
 
@@ -106,6 +109,4 @@ public class PlantDataService : IPlantDataService
     {
         return _dbContext.PlantDataLogs.Any(log => log.Owner.Id == plantId);
     }
-    
-    
 }
