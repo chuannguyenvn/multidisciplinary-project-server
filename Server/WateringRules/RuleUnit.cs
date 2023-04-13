@@ -5,7 +5,27 @@ public abstract class RuleUnit
     public abstract bool Evaluate(MetricValues metricValues);
 }
 
-public class MetricUnit
+public abstract class Operand
+{
+    public abstract float Evaluate(MetricValues metricValues);
+}
+
+public class FloatUnit : Operand
+{
+    public float Value { get; private set; }
+
+    public FloatUnit(float value)
+    {
+        Value = value;
+    }
+
+    public override float Evaluate(MetricValues metricValues)
+    {
+        return Value;
+    }
+}
+
+public class MetricUnit : Operand
 {
     private readonly MetricType _metricType;
 
@@ -14,7 +34,7 @@ public class MetricUnit
         _metricType = metricType;
     }
 
-    public float Evaluate(MetricValues metricValues)
+    public override float Evaluate(MetricValues metricValues)
     {
         return _metricType switch
         {
@@ -60,10 +80,10 @@ public class LogicUnit : RuleUnit
 public class ComparisionUnit : RuleUnit
 {
     private readonly Comparision _comparision;
-    private readonly MetricUnit _lhs;
-    private readonly MetricUnit _rhs;
+    private readonly Operand _lhs;
+    private readonly Operand _rhs;
 
-    public ComparisionUnit(Comparision comparision, MetricUnit lhs, MetricUnit rhs)
+    public ComparisionUnit(Comparision comparision, Operand lhs, Operand rhs)
     {
         _comparision = comparision;
         _lhs = lhs;
@@ -95,5 +115,25 @@ public class BracedUnit : RuleUnit
     public override bool Evaluate(MetricValues metricValues)
     {
         return _logicUnit.Evaluate(metricValues);
+    }
+}
+
+public class WateringRule
+{
+    private List<RuleUnit> RuleUnits;
+
+    public WateringRule(List<RuleUnit> ruleUnits)
+    {
+        RuleUnits = ruleUnits;
+    }
+
+    public bool Evaluate(MetricValues metricValues)
+    {
+        foreach (var ruleUnit in RuleUnits)
+        {
+            if (ruleUnit.Evaluate(metricValues)) return true;
+        }
+
+        return false;
     }
 }
