@@ -1,5 +1,9 @@
 ﻿using System.Text;
+using Antlr4.Runtime;
+using multidisciplinary_project_server;
+using Newtonsoft.Json;
 using Server.Models;
+using Server.WateringRules;
 
 namespace Server.Services;
 
@@ -52,5 +56,17 @@ public class HelperService
     public string ConstructWaterPlantResponseMessage(int plantId)
     {
         return plantId + ";WD";
+    }
+    
+    public WateringRule ParserWateringRuleString(string ruleString)
+    {
+        AntlrInputStream inputStream = new AntlrInputStream(ruleString);
+        WateringRuleLexer wateringRuleLexer = new WateringRuleLexer(inputStream);
+        CommonTokenStream commonTokenStream = new CommonTokenStream(wateringRuleLexer);
+        WateringRuleParser wateringRuleParser = new WateringRuleParser(commonTokenStream);
+        WateringRuleParser.ProgramContext programContext = wateringRuleParser.program();
+        WateringRuleVisitor wateringRuleVisitor = new WateringRuleVisitor();
+        WateringRule wateringRule = (WateringRule)wateringRuleVisitor.Visit(programContext);
+        return wateringRule;
     }
 }

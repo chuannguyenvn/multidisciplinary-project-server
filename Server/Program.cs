@@ -25,7 +25,7 @@ builder.Services.AddScoped<IPlantDataService, PlantDataService>();
 
 builder.Services.AddSingleton<AdafruitMqttService>();
 builder.Services.AddHostedService<AdafruitMqttService>(p => p.GetRequiredService<AdafruitMqttService>());
-builder.Services.AddHostedService<WateringRuleService>();
+builder.Services.AddHostedService<WateringService>();
 
 builder.Services.AddSingleton<HelperService>();
 

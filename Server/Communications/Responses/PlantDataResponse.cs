@@ -11,9 +11,9 @@ namespace Communications.Responses
     public class PlantDataPoint
     {
         [JsonProperty("Timestamp")] public DateTime Timestamp { get; set; }
-        [JsonProperty("LightValue")] public float LightValue { get; set; }
-        [JsonProperty("TemperatureValue")] public float TemperatureValue { get; set; }
-        [JsonProperty("MoistureValue")] public float MoistureValue { get; set; }
+        [JsonProperty("LightValue")] public double LightValue { get; set; }
+        [JsonProperty("TemperatureValue")] public double TemperatureValue { get; set; }
+        [JsonProperty("MoistureValue")] public double MoistureValue { get; set; }
     }
 
     public enum PlantDataRange
