@@ -23,7 +23,7 @@ public class PlantDataService : IPlantDataService
         if (!DoesPlantIdExist(plantId)) return (false, "Plant ID does not exist.");
         if (!DoesPlantHaveAnyLog(plantId)) return (false, "Plant does not have any log.");
 
-        var plantLog = _dbContext.PlantDataLogs.OrderByDescending(log => log.Timestamp).Last(log => log.Owner.Id == plantId);
+        var latestPlantLog = _dbContext.PlantDataLogs.OrderBy(log => log.Timestamp).Last(log => log.Owner.Id == plantId);
 
         return (true, new PlantDataResponse()
         {
@@ -32,10 +32,10 @@ public class PlantDataService : IPlantDataService
             {
                 new PlantDataPoint()
                 {
-                    Timestamp = plantLog.Timestamp,
-                    LightValue = plantLog.LightValue,
-                    TemperatureValue = plantLog.TemperatureValue,
-                    MoistureValue = plantLog.MoistureValue,
+                    Timestamp = latestPlantLog.Timestamp,
+                    LightValue = latestPlantLog.LightValue,
+                    TemperatureValue = latestPlantLog.TemperatureValue,
+                    MoistureValue = latestPlantLog.MoistureValue,
                 },
             },
         });
