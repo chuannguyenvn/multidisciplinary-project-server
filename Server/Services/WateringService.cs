@@ -6,7 +6,7 @@ namespace Server.Services;
 
 public class WateringService : BackgroundService
 {
-    private const float WATERING_RULES_EVALUATION_TIMER = 60f;
+    private const float WATERING_RULES_EVALUATION_TIMER = 5f;
 
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly AdafruitMqttService _adafruitMqttService;
@@ -32,7 +32,10 @@ public class WateringService : BackgroundService
                 {
                     if (!dbContext.PlantDataLogs.Any(log => log.Id == plantInformation.Id)) continue;
 
-                    var latestPlantDataLog = dbContext.PlantDataLogs.Where(log => log.Id == plantInformation.Id).OrderBy(log => log.Id).Last();
+                    var latestPlantDataLog = dbContext.PlantDataLogs.Where(log => log.Owner.Id == plantInformation.Id).OrderBy(log => log.Timestamp).Last();
+                    
+                    if (latestPlantDataLog.Timestamp.AddSeconds(WATERING_RULES_EVALUATION_TIMER) < DateTime.Now) continue;
+
                     var metricValues = new MetricValues(latestPlantDataLog.LightValue, latestPlantDataLog.TemperatureValue, latestPlantDataLog.MoistureValue);
 
                     if (plantInformation.WateringRule == "") continue;
