@@ -23,7 +23,7 @@ public class WateringService : BackgroundService
             using (var scope = _serviceScopeFactory.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
-                var plantManagementService = scope.ServiceProvider.GetRequiredService<PlantManagementService>();
+                var plantManagementService = scope.ServiceProvider.GetRequiredService<IPlantManagementService>();
 
                 foreach (var plantInformation in dbContext.PlantInformations.ToList())
                 {
