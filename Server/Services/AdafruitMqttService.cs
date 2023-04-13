@@ -7,6 +7,8 @@ using Server.Services;
 
 public class AdafruitMqttService : BackgroundService
 {
+    private const float SEND_DATA_BACK_TIMER = 60f;
+    
     public List<string> AnnounceMessageQueue = new();
 
     private readonly Settings _settings;
@@ -54,7 +56,7 @@ public class AdafruitMqttService : BackgroundService
 
     protected async override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var timer = new PeriodicTimer(TimeSpan.FromSeconds(15));
+        var timer = new PeriodicTimer(TimeSpan.FromSeconds(SEND_DATA_BACK_TIMER));
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
             if (_accumulatedPlantDataLogs.Count == 0)
