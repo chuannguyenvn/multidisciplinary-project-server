@@ -36,7 +36,7 @@ public class PlantDataService : IPlantDataService
                     LightValue = plantLog.LightValue,
                     TemperatureValue = plantLog.TemperatureValue,
                     MoistureValue = plantLog.MoistureValue,
-                }
+                },
             },
         });
     }

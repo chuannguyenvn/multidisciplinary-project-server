@@ -2,7 +2,6 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using multidisciplinary_project_server;
 using Server.Models;
 using Server.Services;
 using DbContext = Server.DbContext;

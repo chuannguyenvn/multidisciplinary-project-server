@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Antlr4.Runtime;
 using multidisciplinary_project_server;
-using Newtonsoft.Json;
 using Server.Models;
 using Server.WateringRules;
 

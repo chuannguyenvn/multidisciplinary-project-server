@@ -1,6 +1,4 @@
-﻿using Antlr4.Runtime;
-using multidisciplinary_project_server;
-using Server.WateringRules;
+﻿using Server.WateringRules;
 
 namespace Server.Services;
 
@@ -31,15 +29,12 @@ public class WateringService : BackgroundService
                 foreach (var plantInformation in dbContext.PlantInformations.ToList())
                 {
                     if (!dbContext.PlantDataLogs.Any(log => log.Id == plantInformation.Id)) continue;
+                    if (plantInformation.WateringRule == "") continue;
 
                     var latestPlantDataLog = dbContext.PlantDataLogs.Where(log => log.Owner.Id == plantInformation.Id).OrderBy(log => log.Timestamp).Last();
-                    
                     if (latestPlantDataLog.Timestamp.AddSeconds(WATERING_RULES_EVALUATION_TIMER) < DateTime.Now) continue;
 
                     var metricValues = new MetricValues(latestPlantDataLog.LightValue, latestPlantDataLog.TemperatureValue, latestPlantDataLog.MoistureValue);
-
-                    if (plantInformation.WateringRule == "") continue;
-
                     var wateringRule = _helperService.ParserWateringRuleString(plantInformation.WateringRule);
                     if (wateringRule.Evaluate(metricValues))
                         _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructWaterPlantRequestMessage(plantInformation.Id));
