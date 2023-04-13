@@ -39,7 +39,6 @@ public class AdafruitMqttService : BackgroundService
         var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
             .WithTopicFilter(f => { f.WithTopic(_helperService.AnnounceTopicPath); })
             .WithTopicFilter(f => { f.WithTopic(_helperService.SensorTopicPath); })
-            .WithTopicFilter(f => { f.WithTopic("Leo2308/feeds/dadn.test2"); })
             .Build();
 
         await _mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
