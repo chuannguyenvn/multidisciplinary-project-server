@@ -21,6 +21,7 @@ builder.Services.AddControllers().AddNewtonsoftJson();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IPlantManagementService, PlantManagementService>();
 builder.Services.AddScoped<IPlantDataService, PlantDataService>();
+builder.Services.AddSingleton<WateringRuleTestingService>();
 
 builder.Services.AddSingleton<AdafruitMqttService>();
 builder.Services.AddHostedService<AdafruitMqttService>(p => p.GetRequiredService<AdafruitMqttService>());
@@ -41,6 +42,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
 app.UseHttpsRedirection();
@@ -50,5 +53,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.Run();
