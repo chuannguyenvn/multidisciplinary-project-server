@@ -178,7 +178,7 @@ public class AdafruitMqttService : BackgroundService
     {
         AnnounceMessageQueue.RemoveAll(s => s == message);
 
-        List<int> trialTimers = new() {1000, 2000, 3000};
+        List<int> trialTimers = new() {3000, 4000, 5000};
 
         foreach (var trialTimer in trialTimers)
         {
