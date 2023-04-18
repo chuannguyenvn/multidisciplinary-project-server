@@ -1,8 +1,11 @@
-﻿namespace Communications.Requests;
+﻿using Newtonsoft.Json;
 
-public class TestAgainstMetricsRequest
+namespace Communications.Requests
 {
-    public float Light { get; set; }
-    public float Temperature { get; set; }
-    public float Moisture { get; set; }
+    public class TestAgainstMetricsRequest
+    {
+        [JsonProperty("Light")] public float Light { get; set; }
+        [JsonProperty("Temperature")] public float Temperature { get; set; }
+        [JsonProperty("Moisture")] public float Moisture { get; set; }
+    }
 }

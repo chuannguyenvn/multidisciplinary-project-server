@@ -1,6 +1,9 @@
-﻿namespace Communications.Requests;
+﻿using Newtonsoft.Json;
 
-public class ChangeTestingRuleRequest
+namespace Communications.Requests
 {
-    public string NewRule { get; set; }
+    public class ChangeTestingRuleRequest
+    {
+        [JsonProperty("NewRule")] public string NewRule { get; set; }
+    }
 }
