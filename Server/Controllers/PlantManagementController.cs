@@ -20,7 +20,7 @@ public class PlantManagementController : ControllerBase
     [HttpPost("add")]
     public async Task<IActionResult> AddPlant(AddPlantRequest addPlantRequest)
     {
-        var (success, result) = await _plantManagementService.AddPlant(int.Parse(User.FindFirst("id").Value), addPlantRequest.Name);
+        var (success, result) = await _plantManagementService.AddPlant(User, addPlantRequest.Name);
         if (!success) return BadRequest(result);
         return Ok(result);
     }
@@ -28,7 +28,7 @@ public class PlantManagementController : ControllerBase
     [HttpGet("{id}/remove")]
     public async Task<IActionResult> RemovePlant([FromRoute] int id)
     {
-        var (success, result) = await _plantManagementService.RemovePlant(id);
+        var (success, result) = await _plantManagementService.RemovePlant(User, id);
         if (!success) return BadRequest(result);
         return Ok(result);
     }
@@ -36,7 +36,7 @@ public class PlantManagementController : ControllerBase
     [HttpPost("{id}/edit")]
     public IActionResult EditPlant([FromRoute] int id, EditPlantRequest editPlantRequest)
     {
-        var (success, result) = _plantManagementService.EditPlant(id, editPlantRequest);
+        var (success, result) = _plantManagementService.EditPlant(User, id, editPlantRequest);
         if (!success) return BadRequest(result);
         return Ok(result);
     }
@@ -44,7 +44,7 @@ public class PlantManagementController : ControllerBase
     [HttpGet("get")]
     public IActionResult GetPlantByUser()
     {
-        var (success, result) = _plantManagementService.GetPlantByUser(int.Parse(User.FindFirst("id").Value));
+        var (success, result) = _plantManagementService.GetPlantsOfCurrentUser(User);
         if (!success) return BadRequest(result);
         return Ok(result);
     }
@@ -52,7 +52,7 @@ public class PlantManagementController : ControllerBase
     [HttpGet("{id}/water")]
     public async Task<IActionResult> WaterPlant([FromRoute] int id)
     {
-        var (success, result) = await _plantManagementService.WaterPlant(id);
+        var (success, result) = await _plantManagementService.WaterPlant(User, id);
         if (!success) return BadRequest(result);
         return Ok(result);
     }

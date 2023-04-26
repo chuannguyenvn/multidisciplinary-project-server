@@ -36,18 +36,14 @@ public class WateringService : BackgroundService
                         var latestWaterLog = dbContext.PlantWaterLogs.Where(log => log.LoggedPlant.Id == plantInformation.Id).OrderBy(log => log.Timestamp).Last();
                         if (latestWaterLog.Timestamp.AddSeconds(WATERING_COOLDOWN) > DateTime.UtcNow) continue;
                     }
-                    
+
                     var latestPlantDataLog = dbContext.PlantDataLogs.Where(log => log.LoggedPlant.Id == plantInformation.Id).OrderBy(log => log.Timestamp).Last();
                     var metricValues = new MetricValues(latestPlantDataLog.LightValue, latestPlantDataLog.TemperatureValue, latestPlantDataLog.MoistureValue);
                     (bool success, WateringRule wateringRule) = _helperService.TryParserWateringRuleString(plantInformation.WateringRuleMetrics);
 
                     if (success)
                     {
-                        if (wateringRule.Evaluate(metricValues))
-                        {
-                             var (_, result) = await plantManagementService.WaterPlant(plantInformation.Id);
-                            Console.WriteLine(result);
-                        }
+                        if (wateringRule.Evaluate(metricValues)) plantManagementService.TryWaterPlant(plantInformation.Id);
                     }
                     else
                     {

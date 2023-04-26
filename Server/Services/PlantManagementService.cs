@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Security.Claims;
+using System.Security.Cryptography;
 using Communications.Requests;
 using Communications.Responses;
 using Server.Models;
@@ -9,11 +10,12 @@ namespace Server.Services;
 
 public interface IPlantManagementService
 {
-    public Task<(bool success, object result)> AddPlant(int ownerId, string name);
-    public Task<(bool success, string result)> RemovePlant(int plantId);
-    public (bool success, string result) EditPlant(int plantId, EditPlantRequest editPlantRequest);
-    public (bool success, object result) GetPlantByUser(int userId);
-    public Task<(bool success, object result)> WaterPlant(int plantId);
+    public Task<(bool success, object result)> AddPlant(ClaimsPrincipal user, string name);
+    public Task<(bool success, string result)> RemovePlant(ClaimsPrincipal user, int plantId);
+    public (bool success, string result) EditPlant(ClaimsPrincipal user, int plantId, EditPlantRequest editPlantRequest);
+    public (bool success, object result) GetPlantsOfCurrentUser(ClaimsPrincipal user);
+    public Task<(bool success, object result)> WaterPlant(ClaimsPrincipal user, int plantId);
+    public Task<bool> TryWaterPlant(int plantId);
 }
 
 public class PlantManagementService : IPlantManagementService
@@ -31,7 +33,7 @@ public class PlantManagementService : IPlantManagementService
         _adafruitMqttService = adafruitMqttService;
     }
 
-    public async Task<(bool success, object result)> AddPlant(int ownerId, string name)
+    public async Task<(bool success, object result)> AddPlant(ClaimsPrincipal user, string name)
     {
         var newPlantId = 1;
         if (_dbContext.PlantInformations.Any())
@@ -42,6 +44,8 @@ public class PlantManagementService : IPlantManagementService
         var message = success ? "Plant added." : "Adafruit did not response to the addition request.";
         if (!success) return (false, message);
 
+        int userId = int.Parse(user.FindFirst("id").Value);
+
         // TODO: Add recognizer service.
         var plantInformation = new PlantInformation()
         {
@@ -50,7 +54,7 @@ public class PlantManagementService : IPlantManagementService
             RecognizerCode = "Test",
             WateringRuleRepeats = "",
             WateringRuleMetrics = "",
-            Owner = _dbContext.Users.First(u => u.Id == ownerId),
+            Owner = _dbContext.Users.First(u => u.Id == userId),
         };
 
         _dbContext.PlantInformations.Add(plantInformation);
@@ -59,9 +63,10 @@ public class PlantManagementService : IPlantManagementService
         return (true, message);
     }
 
-    public async Task<(bool success, string result)> RemovePlant(int plantId)
+    public async Task<(bool success, string result)> RemovePlant(ClaimsPrincipal user, int plantId)
     {
-        if (!_dbContext.PlantInformations.Any(p => p.Id == plantId)) return (false, "Plant not found.");
+        if (!_helperService.DoesPlantIdExist(plantId)) return (false, "Plant ID does not exist.");
+        if (!_helperService.DoesUserOwnThisPlant(user, plantId)) return (false, "The current user does not own this plant.");
 
         _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructRemovePlantRequestMessage(plantId));
         var success = await TryWaitForAnnounceMessage(_helperService.ConstructRemovePlantResponseMessage(plantId));
@@ -75,10 +80,11 @@ public class PlantManagementService : IPlantManagementService
         return (true, message);
     }
 
-    public (bool success, string result) EditPlant(int plantId, EditPlantRequest editPlantRequest)
+    public (bool success, string result) EditPlant(ClaimsPrincipal user, int plantId, EditPlantRequest editPlantRequest)
     {
-        if (!_dbContext.PlantInformations.Any(p => p.Id == plantId)) return (false, "Plant not found.");
-
+        if (!_helperService.DoesPlantIdExist(plantId)) return (false, "Plant ID does not exist.");
+        if (!_helperService.DoesUserOwnThisPlant(user, plantId)) return (false, "The current user does not own this plant.");
+        
         var editingPlantInformation = _dbContext.PlantInformations.First(p => p.Id == plantId);
         if (editPlantRequest.NewName != "") editingPlantInformation.Name = editPlantRequest.NewName;
         if (editPlantRequest.NewWateringRuleMetrics != "")
@@ -94,8 +100,10 @@ public class PlantManagementService : IPlantManagementService
         return (true, "");
     }
 
-    public (bool success, object result) GetPlantByUser(int userId)
+    public (bool success, object result) GetPlantsOfCurrentUser(ClaimsPrincipal user)
     {
+        int userId = int.Parse(user.FindFirst("id").Value);
+
         var plantGetResponse = new GetPlantResponse()
         {
             PlantInformations = _dbContext.PlantInformations.Where(p => p.Owner.Id == userId)
@@ -115,13 +123,20 @@ public class PlantManagementService : IPlantManagementService
         return (true, plantGetResponse);
     }
 
-    public async Task<(bool success, object result)> WaterPlant(int plantId)
+    public async Task<(bool success, object result)> WaterPlant(ClaimsPrincipal user, int plantId)
     {
-        if (!_dbContext.PlantInformations.Any(p => p.Id == plantId)) return (false, "Plant not found.");
+        if (!_helperService.DoesPlantIdExist(plantId)) return (false, "Plant ID does not exist.");
+        if (!_helperService.DoesUserOwnThisPlant(user, plantId)) return (false, "The current user does not own this plant.");
 
+        var success = await TryWaterPlant(plantId);
+        return success ? (true, "Plant watered.") : (false, "Adafruit did not response to watering request.");
+    }
+
+    public async Task<bool> TryWaterPlant(int plantId)
+    {
         _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructWaterPlantRequestMessage(plantId));
         var success = await TryWaitForAnnounceMessage(_helperService.ConstructWaterPlantResponseMessage(plantId));
-        if (!success) return (false, "Adafruit did not response to watering request.");
+        if (!success) return false;
 
         var plantWaterLog = new PlantWaterLog()
         {
@@ -131,8 +146,8 @@ public class PlantManagementService : IPlantManagementService
         };
 
         _dbContext.PlantWaterLogs.Add(plantWaterLog);
-        _dbContext.SaveChanges();
-        return (true, "Plant watered.");
+        await _dbContext.SaveChangesAsync();
+        return true;
     }
 
     private async Task<bool> TryWaitForAnnounceMessage(string message)

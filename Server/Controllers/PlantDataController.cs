@@ -19,7 +19,7 @@ public class PlantDataController : ControllerBase
     [HttpGet("{plantId}/latest")]
     public IActionResult GetLatestData([FromRoute] int plantId)
     {
-        var (success, content) = _plantDataService.GetLatestData(plantId);
+        var (success, content) = _plantDataService.GetLatestData(User, plantId);
         if (!success) return BadRequest(content);
         return Ok(content);
     }
@@ -27,7 +27,7 @@ public class PlantDataController : ControllerBase
     [HttpGet("{plantId}/lasthour")]
     public IActionResult GetLastHourData([FromRoute] int plantId)
     {
-        var (success, content) = _plantDataService.GetLastHourData(plantId);
+        var (success, content) = _plantDataService.GetLastHourData(User, plantId);
         if (!success) return BadRequest(content);
         return Ok(content);
     }
@@ -35,7 +35,7 @@ public class PlantDataController : ControllerBase
     [HttpGet("{plantId}/last24hours")]
     public IActionResult GetLast24HoursData([FromRoute] int plantId)
     {
-        var (success, content) = _plantDataService.GetLast24HoursData(plantId);
+        var (success, content) = _plantDataService.GetLast24HoursData(User, plantId);
         if (!success) return BadRequest(content);
         return Ok(content);
     }
