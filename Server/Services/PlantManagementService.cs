@@ -87,6 +87,7 @@ public class PlantManagementService : IPlantManagementService
             if (success) editingPlantInformation.WateringRuleMetrics = editPlantRequest.NewWateringRuleMetrics;
             else return (false, "Invalid watering rule.");
         }
+
         _dbContext.PlantInformations.Update(editingPlantInformation);
         _dbContext.SaveChanges();
 
@@ -105,6 +106,8 @@ public class PlantManagementService : IPlantManagementService
                     Name = info.Name,
                     CreatedDate = info.CreatedDate,
                     RecognizerCode = info.RecognizerCode,
+                    WateringRuleRepeats = info.WateringRuleRepeats,
+                    WateringRuleMetrics = info.WateringRuleMetrics,
                 })
                 .ToList(),
         };
@@ -153,7 +156,7 @@ public class PlantManagementService : IPlantManagementService
         }
 
         _adafruitMqttService.AnnounceMessageArrived -= MessageArrivedHandler;
-        
+
         return correctMessageReceived;
     }
 }
