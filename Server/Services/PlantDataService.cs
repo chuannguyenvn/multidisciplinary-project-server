@@ -24,12 +24,12 @@ public class PlantDataService : IPlantDataService
         if (!DoesPlantIdExist(plantId)) return (false, "Plant ID does not exist.");
         if (!DoesPlantHaveAnyDataLog(plantId)) return (false, "Plant does not have any log.");
 
-        var latestPlantLog = _dbContext.PlantDataLogs.OrderBy(log => log.Timestamp).Last(log => log.Owner.Id == plantId);
+        var latestPlantLog = _dbContext.PlantDataLogs.OrderBy(log => log.Timestamp).Last(log => log.LoggedPlant.Id == plantId);
         var plantWaterLogList = new List<PlantWaterPoint>();
 
-        if (_dbContext.PlantWaterLogs.Any(log => log.WateredPlant.Id == plantId))
+        if (_dbContext.PlantWaterLogs.Any(log => log.LoggedPlant.Id == plantId))
         {
-            var latestWaterLog = _dbContext.PlantWaterLogs.OrderBy(log => log.Timestamp).Last(log => log.WateredPlant.Id == plantId);
+            var latestWaterLog = _dbContext.PlantWaterLogs.OrderBy(log => log.Timestamp).Last(log => log.LoggedPlant.Id == plantId);
             plantWaterLogList.Add(new PlantWaterPoint()
             {
                 Timestamp = latestWaterLog.Timestamp,
@@ -59,8 +59,8 @@ public class PlantDataService : IPlantDataService
         if (!DoesPlantIdExist(plantId)) return (false, "Plant ID does not exist.");
         if (!DoesPlantHaveAnyDataLog(plantId)) return (false, "Plant does not have any log.");
 
-        var dataLogs = _dbContext.PlantDataLogs.Where(log => log.Owner.Id == plantId && log.Timestamp > DateTime.UtcNow.AddHours(-1)).OrderByDescending(log => log.Timestamp);
-        var waterLogs = _dbContext.PlantWaterLogs.Where(log => log.WateredPlant.Id == plantId && log.Timestamp > DateTime.UtcNow.AddHours(-1)).OrderByDescending(log => log.Timestamp);
+        var dataLogs = _dbContext.PlantDataLogs.Where(log => log.LoggedPlant.Id == plantId && log.Timestamp > DateTime.UtcNow.AddHours(-1)).OrderByDescending(log => log.Timestamp);
+        var waterLogs = _dbContext.PlantWaterLogs.Where(log => log.LoggedPlant.Id == plantId && log.Timestamp > DateTime.UtcNow.AddHours(-1)).OrderByDescending(log => log.Timestamp);
 
         var plantDataPoints = dataLogs.Select(log => new PlantDataPoint()
             {
@@ -82,8 +82,8 @@ public class PlantDataService : IPlantDataService
         if (!DoesPlantIdExist(plantId)) return (false, "Plant ID does not exist.");
         if (!DoesPlantHaveAnyDataLog(plantId)) return (false, "Plant does not have any log.");
 
-        var dataLogs = _dbContext.PlantDataLogs.Where(log => log.Owner.Id == plantId && log.Timestamp > DateTime.UtcNow.AddHours(-24)).OrderByDescending(log => log.Timestamp);
-        var waterLogs = _dbContext.PlantWaterLogs.Where(log => log.WateredPlant.Id == plantId && log.Timestamp > DateTime.UtcNow.AddHours(-24)).OrderByDescending(log => log.Timestamp);
+        var dataLogs = _dbContext.PlantDataLogs.Where(log => log.LoggedPlant.Id == plantId && log.Timestamp > DateTime.UtcNow.AddHours(-24)).OrderByDescending(log => log.Timestamp);
+        var waterLogs = _dbContext.PlantWaterLogs.Where(log => log.LoggedPlant.Id == plantId && log.Timestamp > DateTime.UtcNow.AddHours(-24)).OrderByDescending(log => log.Timestamp);
 
         var plantDataPoints = dataLogs.Select(log => new PlantDataPoint()
             {
@@ -107,6 +107,6 @@ public class PlantDataService : IPlantDataService
 
     private bool DoesPlantHaveAnyDataLog(int plantId)
     {
-        return _dbContext.PlantDataLogs.Any(log => log.Owner.Id == plantId);
+        return _dbContext.PlantDataLogs.Any(log => log.LoggedPlant.Id == plantId);
     }
 }

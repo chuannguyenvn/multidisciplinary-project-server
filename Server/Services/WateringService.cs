@@ -28,18 +28,18 @@ public class WateringService : BackgroundService
 
                 foreach (var plantInformation in dbContext.PlantInformations.ToList())
                 {
-                    if (!dbContext.PlantDataLogs.Any(log => log.Owner.Id == plantInformation.Id)) continue;
-                    if (plantInformation.WateringRule == "") continue;
+                    if (!dbContext.PlantDataLogs.Any(log => log.LoggedPlant.Id == plantInformation.Id)) continue;
+                    if (plantInformation.WateringRuleMetrics == "") continue;
 
-                    if (dbContext.PlantWaterLogs.Any(log => log.WateredPlant.Id == plantInformation.Id))
+                    if (dbContext.PlantWaterLogs.Any(log => log.LoggedPlant.Id == plantInformation.Id))
                     {
-                        var latestWaterLog = dbContext.PlantWaterLogs.Where(log => log.WateredPlant.Id == plantInformation.Id).OrderBy(log => log.Timestamp).Last();
+                        var latestWaterLog = dbContext.PlantWaterLogs.Where(log => log.LoggedPlant.Id == plantInformation.Id).OrderBy(log => log.Timestamp).Last();
                         if (latestWaterLog.Timestamp.AddSeconds(WATERING_COOLDOWN) > DateTime.UtcNow) continue;
                     }
                     
-                    var latestPlantDataLog = dbContext.PlantDataLogs.Where(log => log.Owner.Id == plantInformation.Id).OrderBy(log => log.Timestamp).Last();
+                    var latestPlantDataLog = dbContext.PlantDataLogs.Where(log => log.LoggedPlant.Id == plantInformation.Id).OrderBy(log => log.Timestamp).Last();
                     var metricValues = new MetricValues(latestPlantDataLog.LightValue, latestPlantDataLog.TemperatureValue, latestPlantDataLog.MoistureValue);
-                    (bool success, WateringRule wateringRule) = _helperService.TryParserWateringRuleString(plantInformation.WateringRule);
+                    (bool success, WateringRule wateringRule) = _helperService.TryParserWateringRuleString(plantInformation.WateringRuleMetrics);
 
                     if (success)
                     {
@@ -51,7 +51,7 @@ public class WateringService : BackgroundService
                     }
                     else
                     {
-                        Console.WriteLine("Parsing watering rule failed: " + plantInformation.WateringRule);
+                        Console.WriteLine("Parsing watering rule failed: " + plantInformation.WateringRuleMetrics);
                     }
                 }
             }

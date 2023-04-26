@@ -88,7 +88,7 @@ public class AdafruitMqttService : BackgroundService
                         LightValue = accumulatedPlantDataLog.AveragedLightValue,
                         TemperatureValue = accumulatedPlantDataLog.AveragedTemperatureValue,
                         MoistureValue = accumulatedPlantDataLog.AveragedMoistureValue,
-                        Owner = ownerPlant,
+                        LoggedPlant = ownerPlant,
                     });
                 }
 

@@ -7,5 +7,6 @@ public class PlantDataLog
     public float LightValue { get; set; }
     public float TemperatureValue { get; set; }
     public float MoistureValue { get; set; }
-    public PlantInformation Owner { get; set; }
+    
+    public PlantInformation LoggedPlant { get; set; }
 }

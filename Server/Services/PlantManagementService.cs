@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using Communications.Requests;
 using Communications.Responses;
 using Server.Models;
 using Server.WateringRules;
@@ -8,9 +9,9 @@ namespace Server.Services;
 
 public interface IPlantManagementService
 {
-    public Task<(bool success, object result)> AddPlant(int ownerId, string name, string photo);
+    public Task<(bool success, object result)> AddPlant(int ownerId, string name);
     public Task<(bool success, string result)> RemovePlant(int plantId);
-    public (bool success, string result) EditPlant(int plantId, string newName = "", string newPhoto = "", string newWateringRule = "");
+    public (bool success, string result) EditPlant(int plantId, EditPlantRequest editPlantRequest);
     public (bool success, object result) GetPlantByUser(int userId);
     public Task<(bool success, object result)> WaterPlant(int plantId);
 }
@@ -30,7 +31,7 @@ public class PlantManagementService : IPlantManagementService
         _adafruitMqttService = adafruitMqttService;
     }
 
-    public async Task<(bool success, object result)> AddPlant(int ownerId, string name, string photo)
+    public async Task<(bool success, object result)> AddPlant(int ownerId, string name)
     {
         var newPlantId = 1;
         if (_dbContext.PlantInformations.Any())
@@ -46,9 +47,9 @@ public class PlantManagementService : IPlantManagementService
         {
             Name = name,
             CreatedDate = DateTime.Today,
-            Photo = photo,
             RecognizerCode = "Test",
-            WateringRule = "",
+            WateringRuleRepeats = "",
+            WateringRuleMetrics = "",
             Owner = _dbContext.Users.First(u => u.Id == ownerId),
         };
 
@@ -74,17 +75,16 @@ public class PlantManagementService : IPlantManagementService
         return (true, message);
     }
 
-    public (bool success, string result) EditPlant(int plantId, string newName = "", string newPhoto = "", string newWateringRule = "")
+    public (bool success, string result) EditPlant(int plantId, EditPlantRequest editPlantRequest)
     {
         if (!_dbContext.PlantInformations.Any(p => p.Id == plantId)) return (false, "Plant not found.");
 
         var editingPlantInformation = _dbContext.PlantInformations.First(p => p.Id == plantId);
-        if (newName != "") editingPlantInformation.Name = newName;
-        if (newPhoto != "") editingPlantInformation.Photo = newPhoto;
-        if (newWateringRule != "")
+        if (editPlantRequest.NewName != "") editingPlantInformation.Name = editPlantRequest.NewName;
+        if (editPlantRequest.NewWateringRuleMetrics != "")
         {
-            (bool success, WateringRule _) = _helperService.TryParserWateringRuleString(newWateringRule);
-            if (success) editingPlantInformation.WateringRule = newWateringRule;
+            (bool success, WateringRule _) = _helperService.TryParserWateringRuleString(editPlantRequest.NewWateringRuleMetrics);
+            if (success) editingPlantInformation.WateringRuleMetrics = editPlantRequest.NewWateringRuleMetrics;
             else return (false, "Invalid watering rule.");
         }
         _dbContext.PlantInformations.Update(editingPlantInformation);
@@ -104,7 +104,6 @@ public class PlantManagementService : IPlantManagementService
                     Id = info.Id,
                     Name = info.Name,
                     CreatedDate = info.CreatedDate,
-                    Photo = info.Photo,
                     RecognizerCode = info.RecognizerCode,
                 })
                 .ToList(),
@@ -124,7 +123,7 @@ public class PlantManagementService : IPlantManagementService
         var plantWaterLog = new PlantWaterLog()
         {
             Timestamp = DateTime.UtcNow,
-            WateredPlant = _dbContext.PlantInformations.First(info => info.Id == plantId),
+            LoggedPlant = _dbContext.PlantInformations.First(info => info.Id == plantId),
             IsManual = true,
         };
 

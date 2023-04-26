@@ -20,7 +20,7 @@ public class PlantManagementController : ControllerBase
     [HttpPost("add")]
     public async Task<IActionResult> AddPlant(AddPlantRequest addPlantRequest)
     {
-        var (success, result) = await _plantManagementService.AddPlant(int.Parse(User.FindFirst("id").Value), addPlantRequest.Name, addPlantRequest.Photo);
+        var (success, result) = await _plantManagementService.AddPlant(int.Parse(User.FindFirst("id").Value), addPlantRequest.Name);
         if (!success) return BadRequest(result);
         return Ok(result);
     }
@@ -36,7 +36,7 @@ public class PlantManagementController : ControllerBase
     [HttpPost("{id}/edit")]
     public IActionResult EditPlant([FromRoute] int id, EditPlantRequest editPlantRequest)
     {
-        var (success, result) = _plantManagementService.EditPlant(id, editPlantRequest.NewName, editPlantRequest.NewPhoto, editPlantRequest.NewWateringRule);
+        var (success, result) = _plantManagementService.EditPlant(id, editPlantRequest);
         if (!success) return BadRequest(result);
         return Ok(result);
     }
