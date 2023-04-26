@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using System.Text;
 using Antlr4.Runtime;
+using Cronos;
 using multidisciplinary_project_server;
 using Server.Models;
 using Server.WateringRules;
@@ -79,6 +80,21 @@ public class HelperService
         }
 
         return (true, wateringRule);
+    }
+
+    public (bool success, CronExpression cronExpression) TryParserCronString(string cronString)
+    {
+        CronExpression cronExpression;
+        try
+        {
+            cronExpression = CronExpression.Parse(cronString);
+        }
+        catch (Exception e)
+        {
+            return (false, null);
+        }
+
+        return (true, cronExpression);
     }
 
     public bool DoesPlantIdExist(int plantId)

@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using Communications.Requests;
 using Communications.Responses;
+using Cronos;
 using Server.Models;
 using Server.WateringRules;
 
@@ -87,11 +88,17 @@ public class PlantManagementService : IPlantManagementService
         
         var editingPlantInformation = _dbContext.PlantInformations.First(p => p.Id == plantId);
         if (editPlantRequest.NewName != "") editingPlantInformation.Name = editPlantRequest.NewName;
+        if (editPlantRequest.NewWateringRuleRepeats != "")
+        {
+            (bool success, CronExpression _) = _helperService.TryParserCronString(editPlantRequest.NewWateringRuleRepeats);
+            if (success) editingPlantInformation.WateringRuleRepeats = editPlantRequest.NewWateringRuleRepeats;
+            else return (false, "Invalid watering rule: " + editPlantRequest.NewWateringRuleRepeats);
+        }
         if (editPlantRequest.NewWateringRuleMetrics != "")
         {
             (bool success, WateringRule _) = _helperService.TryParserWateringRuleString(editPlantRequest.NewWateringRuleMetrics);
             if (success) editingPlantInformation.WateringRuleMetrics = editPlantRequest.NewWateringRuleMetrics;
-            else return (false, "Invalid watering rule.");
+            else return (false, "Invalid watering rule: " + editPlantRequest.NewWateringRuleMetrics);
         }
 
         _dbContext.PlantInformations.Update(editingPlantInformation);
