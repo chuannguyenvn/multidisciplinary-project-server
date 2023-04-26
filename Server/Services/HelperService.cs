@@ -56,16 +56,25 @@ public class HelperService
     {
         return plantId + ";WD";
     }
-    
-    public WateringRule ParserWateringRuleString(string ruleString)
+
+    public (bool success, WateringRule wateringRule) TryParserWateringRuleString(string ruleString)
     {
-        AntlrInputStream inputStream = new AntlrInputStream(ruleString);
-        WateringRuleLexer wateringRuleLexer = new WateringRuleLexer(inputStream);
-        CommonTokenStream commonTokenStream = new CommonTokenStream(wateringRuleLexer);
-        WateringRuleParser wateringRuleParser = new WateringRuleParser(commonTokenStream);
-        WateringRuleParser.ProgramContext programContext = wateringRuleParser.program();
-        WateringRuleVisitor wateringRuleVisitor = new WateringRuleVisitor();
-        WateringRule wateringRule = (WateringRule)wateringRuleVisitor.Visit(programContext);
-        return wateringRule;
+        WateringRule wateringRule;
+        try
+        {
+            AntlrInputStream inputStream = new AntlrInputStream(ruleString);
+            WateringRuleLexer wateringRuleLexer = new WateringRuleLexer(inputStream);
+            CommonTokenStream commonTokenStream = new CommonTokenStream(wateringRuleLexer);
+            WateringRuleParser wateringRuleParser = new WateringRuleParser(commonTokenStream);
+            WateringRuleParser.ProgramContext programContext = wateringRuleParser.program();
+            WateringRuleVisitor wateringRuleVisitor = new WateringRuleVisitor();
+            wateringRule = (WateringRule)wateringRuleVisitor.Visit(programContext);
+        }
+        catch (Exception e)
+        {
+            return (false, null);
+        }
+
+        return (true, wateringRule);
     }
 }

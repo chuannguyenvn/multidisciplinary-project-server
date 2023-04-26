@@ -29,11 +29,19 @@ public class WateringService : BackgroundService
                 {
                     if (!dbContext.PlantDataLogs.Any(log => log.Owner.Id == plantInformation.Id)) continue;
                     if (plantInformation.WateringRule == "") continue;
-                    
+
                     var latestPlantDataLog = dbContext.PlantDataLogs.Where(log => log.Owner.Id == plantInformation.Id).OrderBy(log => log.Timestamp).Last();
                     var metricValues = new MetricValues(latestPlantDataLog.LightValue, latestPlantDataLog.TemperatureValue, latestPlantDataLog.MoistureValue);
-                    var wateringRule = _helperService.ParserWateringRuleString(plantInformation.WateringRule);
-                    if (wateringRule.Evaluate(metricValues)) plantManagementService.WaterPlant(plantInformation.Id);
+                    (bool success, WateringRule wateringRule) = _helperService.TryParserWateringRuleString(plantInformation.WateringRule);
+
+                    if (success)
+                    {
+                        if (wateringRule.Evaluate(metricValues)) plantManagementService.WaterPlant(plantInformation.Id);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Parsing watering rule failed: " + plantInformation.WateringRule);
+                    }
                 }
             }
         }

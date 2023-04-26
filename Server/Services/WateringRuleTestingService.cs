@@ -15,16 +15,13 @@ public class WateringRuleTestingService
 
     public (bool success, string result) ChangeRule(ChangeTestingRuleRequest request)
     {
-        try
+        (bool success, WateringRule wateringRule) = _helperService.TryParserWateringRuleString(request.NewRule);
+        if (success)
         {
-            _currentWateringRule = _helperService.ParserWateringRuleString(request.NewRule);
+            _currentWateringRule = wateringRule;
+            return (true, "Successful.");
         }
-        catch (Exception e)
-        {
-            return (false, "Failed: " + e);
-        }
-
-        return (true, "Successful.");
+        else return (false, "Failed.");
     }
 
     public (bool success, string result) TestAgainstMetrics(TestAgainstMetricsRequest request)

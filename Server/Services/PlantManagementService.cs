@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using Communications.Responses;
 using Server.Models;
+using Server.WateringRules;
 
 
 namespace Server.Services;
@@ -80,7 +81,12 @@ public class PlantManagementService : IPlantManagementService
         var editingPlantInformation = _dbContext.PlantInformations.First(p => p.Id == plantId);
         if (newName != "") editingPlantInformation.Name = newName;
         if (newPhoto != "") editingPlantInformation.Photo = newPhoto;
-        if (newWateringRule != "") editingPlantInformation.WateringRule = newWateringRule;
+        if (newWateringRule != "")
+        {
+            (bool success, WateringRule _) = _helperService.TryParserWateringRuleString(newWateringRule);
+            if (success) editingPlantInformation.WateringRule = newWateringRule;
+            else return (false, "Invalid watering rule.");
+        }
         _dbContext.PlantInformations.Update(editingPlantInformation);
         _dbContext.SaveChanges();
 
