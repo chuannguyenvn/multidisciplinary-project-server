@@ -4,7 +4,8 @@ namespace Server.Services;
 
 public class WateringService : BackgroundService
 {
-    private const float WATERING_RULES_EVALUATION_TIMER = 60f;
+    private const float WATERING_RULES_EVALUATION_TIMER = 30f;
+    private const float WATERING_COOLDOWN = 60f;
 
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly HelperService _helperService;
@@ -30,13 +31,23 @@ public class WateringService : BackgroundService
                     if (!dbContext.PlantDataLogs.Any(log => log.Owner.Id == plantInformation.Id)) continue;
                     if (plantInformation.WateringRule == "") continue;
 
+                    if (dbContext.PlantWaterLogs.Any(log => log.WateredPlant.Id == plantInformation.Id))
+                    {
+                        var latestWaterLog = dbContext.PlantWaterLogs.Where(log => log.WateredPlant.Id == plantInformation.Id).OrderBy(log => log.Timestamp).Last();
+                        if (latestWaterLog.Timestamp.AddSeconds(WATERING_COOLDOWN) > DateTime.UtcNow) continue;
+                    }
+                    
                     var latestPlantDataLog = dbContext.PlantDataLogs.Where(log => log.Owner.Id == plantInformation.Id).OrderBy(log => log.Timestamp).Last();
                     var metricValues = new MetricValues(latestPlantDataLog.LightValue, latestPlantDataLog.TemperatureValue, latestPlantDataLog.MoistureValue);
                     (bool success, WateringRule wateringRule) = _helperService.TryParserWateringRuleString(plantInformation.WateringRule);
 
                     if (success)
                     {
-                        if (wateringRule.Evaluate(metricValues)) plantManagementService.WaterPlant(plantInformation.Id);
+                        if (wateringRule.Evaluate(metricValues))
+                        {
+                             var (_, result) = await plantManagementService.WaterPlant(plantInformation.Id);
+                            Console.WriteLine(result);
+                        }
                     }
                     else
                     {
