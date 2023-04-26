@@ -123,7 +123,7 @@ public class PlantManagementService : IPlantManagementService
 
         var plantWaterLog = new PlantWaterLog()
         {
-            Timestamp = DateTime.Now,
+            Timestamp = DateTime.UtcNow,
             WateredPlant = _dbContext.PlantInformations.First(info => info.Id == plantId),
             IsManual = true,
         };

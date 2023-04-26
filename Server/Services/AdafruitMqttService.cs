@@ -18,7 +18,7 @@ public class AdafruitMqttService : BackgroundService
     private IMqttClient _mqttClient;
 
     private List<AccumulatedPlantDataLog> _accumulatedPlantDataLogs = new();
-    private string _accumulatorStartTimeString = DateTime.Now.ToString();
+    private string _accumulatorStartTimeString = DateTime.UtcNow.ToString();
 
     public AdafruitMqttService(Settings settings, HelperService helperService, IServiceScopeFactory serviceScopeFactory)
     {
@@ -84,7 +84,7 @@ public class AdafruitMqttService : BackgroundService
 
                     dbContext.PlantDataLogs.Add(new PlantDataLog()
                     {
-                        Timestamp = DateTime.Now,
+                        Timestamp = DateTime.UtcNow,
                         LightValue = accumulatedPlantDataLog.AveragedLightValue,
                         TemperatureValue = accumulatedPlantDataLog.AveragedTemperatureValue,
                         MoistureValue = accumulatedPlantDataLog.AveragedMoistureValue,
@@ -95,7 +95,7 @@ public class AdafruitMqttService : BackgroundService
                 await dbContext.SaveChangesAsync(stoppingToken);
 
                 _accumulatedPlantDataLogs = new();
-                _accumulatorStartTimeString = DateTime.Now.ToString();
+                _accumulatorStartTimeString = DateTime.UtcNow.ToString();
             }
         }
     }
