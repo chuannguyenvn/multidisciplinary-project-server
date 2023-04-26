@@ -8,8 +8,8 @@ using Server.Services;
 public class AdafruitMqttService : BackgroundService
 {
     private const float SEND_DATA_BACK_TIMER = 60f;
-    
-    public List<string> AnnounceMessageQueue = new();
+
+    public event Action<string> AnnounceMessageArrived; 
 
     private readonly Settings _settings;
     private readonly HelperService _helperService;
@@ -122,11 +122,7 @@ public class AdafruitMqttService : BackgroundService
 
     private void AnnounceMessageReceivedHandler(string content)
     {
-        if (content[^1] == 'D')
-        {
-            Console.WriteLine("Announce completion message queued.");
-            AnnounceMessageQueue.Add(content);
-        }
+        AnnounceMessageArrived?.Invoke(content);
     }
 
     private void SensorMessageReceivedHandler(string content)
@@ -172,28 +168,5 @@ public class AdafruitMqttService : BackgroundService
                     break;
             }
         }
-    }
-
-    public async Task<bool> TryWaitForAnnounceMessage(string message)
-    {
-        AnnounceMessageQueue.RemoveAll(s => s == message);
-
-        List<int> trialTimers = new() {3000, 4000, 5000};
-
-        foreach (var trialTimer in trialTimers)
-        {
-            await Task.Delay(trialTimer);
-
-            Console.WriteLine("Waited for " + trialTimer / 1000 + " seconds.");
-
-            if (AnnounceMessageQueue.Contains(message))
-            {
-                Console.WriteLine("Waited message found and dequeued.");
-                AnnounceMessageQueue.Remove(message);
-                return true;
-            }
-        }
-
-        return false;
     }
 }

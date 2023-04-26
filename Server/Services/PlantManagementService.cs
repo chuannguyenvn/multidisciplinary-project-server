@@ -1,4 +1,5 @@
-﻿using Communications.Responses;
+﻿using System.Security.Cryptography;
+using Communications.Responses;
 using Server.Models;
 
 
@@ -15,6 +16,8 @@ public interface IPlantManagementService
 
 public class PlantManagementService : IPlantManagementService
 {
+    private const float WAIT_FOR_MESSAGE_TIMEOUT = 10f;
+
     private readonly DbContext _dbContext;
     private readonly HelperService _helperService;
     private readonly AdafruitMqttService _adafruitMqttService;
@@ -33,7 +36,7 @@ public class PlantManagementService : IPlantManagementService
             newPlantId = _dbContext.PlantInformations.OrderBy(info => info.Id).Last().Id + 1;
 
         _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructAddNewPlantRequestMessage(newPlantId));
-        var success = await _adafruitMqttService.TryWaitForAnnounceMessage(_helperService.ConstructAddNewPlantResponseMessage(newPlantId));
+        var success = await TryWaitForAnnounceMessage(_helperService.ConstructAddNewPlantResponseMessage(newPlantId));
         var message = success ? "Plant added." : "Adafruit did not response to the addition request.";
         if (!success) return (false, message);
 
@@ -59,7 +62,7 @@ public class PlantManagementService : IPlantManagementService
         if (!_dbContext.PlantInformations.Any(p => p.Id == plantId)) return (false, "Plant not found.");
 
         _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructRemovePlantRequestMessage(plantId));
-        var success = await _adafruitMqttService.TryWaitForAnnounceMessage(_helperService.ConstructRemovePlantResponseMessage(plantId));
+        var success = await TryWaitForAnnounceMessage(_helperService.ConstructRemovePlantResponseMessage(plantId));
         var message = success ? "Plant removed." : "Adafruit did not response to the removal request.";
         if (!success) return (false, message);
 
@@ -109,7 +112,7 @@ public class PlantManagementService : IPlantManagementService
         if (!_dbContext.PlantInformations.Any(p => p.Id == plantId)) return (false, "Plant not found.");
 
         _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructWaterPlantRequestMessage(plantId));
-        var success = await _adafruitMqttService.TryWaitForAnnounceMessage(_helperService.ConstructWaterPlantResponseMessage(plantId));
+        var success = await TryWaitForAnnounceMessage(_helperService.ConstructWaterPlantResponseMessage(plantId));
         if (!success) return (false, "Adafruit did not response to watering request.");
 
         var plantWaterLog = new PlantWaterLog()
@@ -122,5 +125,30 @@ public class PlantManagementService : IPlantManagementService
         _dbContext.PlantWaterLogs.Add(plantWaterLog);
         _dbContext.SaveChanges();
         return (true, "Plant watered.");
+    }
+
+    private async Task<bool> TryWaitForAnnounceMessage(string message)
+    {
+        bool correctMessageReceived = false;
+        float timeLeft = WAIT_FOR_MESSAGE_TIMEOUT;
+        const float step = 1f;
+
+        void MessageArrivedHandler(string m)
+        {
+            correctMessageReceived = m == message;
+        }
+
+        _adafruitMqttService.AnnounceMessageArrived += MessageArrivedHandler;
+
+        while (timeLeft > 0)
+        {
+            if (correctMessageReceived) break;
+            await Task.Delay((int)(step * 1000));
+            timeLeft -= step;
+        }
+
+        _adafruitMqttService.AnnounceMessageArrived -= MessageArrivedHandler;
+        
+        return correctMessageReceived;
     }
 }
