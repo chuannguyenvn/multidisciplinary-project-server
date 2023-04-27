@@ -31,34 +31,34 @@ public class HelperService
         return Encoding.UTF8.GetString(base64EncodedBytes);
     }
 
-    public string ConstructAddNewPlantRequestMessage(int plantId)
+    public string ConstructAddNewPlantRequestMessage(int plantOrder)
     {
-        return plantId + ";N";
+        return plantOrder + ";N";
     }
 
-    public string ConstructAddNewPlantResponseMessage(int plantId)
+    public string ConstructAddNewPlantResponseMessage(int plantOrder)
     {
-        return plantId + ";ND";
+        return plantOrder + ";ND";
     }
 
-    public string ConstructRemovePlantRequestMessage(int plantId)
+    public string ConstructRemovePlantRequestMessage(int plantOrder)
     {
-        return plantId + ";R";
+        return plantOrder + ";R";
     }
 
-    public string ConstructRemovePlantResponseMessage(int plantId)
+    public string ConstructRemovePlantResponseMessage(int plantOrder)
     {
-        return plantId + ";RD";
+        return plantOrder + ";RD";
     }
 
-    public string ConstructWaterPlantRequestMessage(int plantId)
+    public string ConstructWaterPlantRequestMessage(int plantOrder)
     {
-        return plantId + ";W";
+        return plantOrder + ";W";
     }
 
-    public string ConstructWaterPlantResponseMessage(int plantId)
+    public string ConstructWaterPlantResponseMessage(int plantOrder)
     {
-        return plantId + ";WD";
+        return plantOrder + ";WD";
     }
 
     public (bool success, WateringRule wateringRule) TryParserWateringRuleString(string ruleString)

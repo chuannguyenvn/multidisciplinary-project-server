@@ -16,7 +16,7 @@ public interface IPlantManagementService
     public (bool success, string result) EditPlant(ClaimsPrincipal user, int plantId, EditPlantRequest editPlantRequest);
     public (bool success, object result) GetPlantsOfCurrentUser(ClaimsPrincipal user);
     public Task<(bool success, object result)> WaterPlant(ClaimsPrincipal user, int plantId);
-    public Task<bool> TryWaterPlant(int plantId);
+    public Task<bool> TryWaterPlant(int plantOrder);
 }
 
 public class PlantManagementService : IPlantManagementService
@@ -69,8 +69,11 @@ public class PlantManagementService : IPlantManagementService
         if (!_helperService.DoesPlantIdExist(plantId)) return (false, "Plant ID does not exist.");
         if (!_helperService.DoesUserOwnThisPlant(user, plantId)) return (false, "The current user does not own this plant.");
 
-        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructRemovePlantRequestMessage(plantId));
-        var success = await TryWaitForAnnounceMessage(_helperService.ConstructRemovePlantResponseMessage(plantId));
+        List<PlantInformation> plantInformationList = _dbContext.PlantInformations.OrderBy(info => info.Id).ToList();
+        int plantOrder = plantInformationList.FindIndex(info => info.Id == plantId);
+        
+        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructRemovePlantRequestMessage(plantOrder));
+        var success = await TryWaitForAnnounceMessage(_helperService.ConstructRemovePlantResponseMessage(plantOrder));
         var message = success ? "Plant removed." : "Adafruit did not response to the removal request.";
         if (!success) return (false, message);
 
@@ -139,16 +142,16 @@ public class PlantManagementService : IPlantManagementService
         return success ? (true, "Plant watered.") : (false, "Adafruit did not response to watering request.");
     }
 
-    public async Task<bool> TryWaterPlant(int plantId)
+    public async Task<bool> TryWaterPlant(int plantOrder)
     {
-        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructWaterPlantRequestMessage(plantId));
-        var success = await TryWaitForAnnounceMessage(_helperService.ConstructWaterPlantResponseMessage(plantId));
+        _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructWaterPlantRequestMessage(plantOrder));
+        var success = await TryWaitForAnnounceMessage(_helperService.ConstructWaterPlantResponseMessage(plantOrder));
         if (!success) return false;
 
         var plantWaterLog = new PlantWaterLog()
         {
             Timestamp = DateTime.UtcNow,
-            LoggedPlant = _dbContext.PlantInformations.First(info => info.Id == plantId),
+            LoggedPlant = _dbContext.PlantInformations.First(info => info.Id == plantOrder),
             IsManual = true,
         };
 

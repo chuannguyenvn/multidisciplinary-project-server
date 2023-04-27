@@ -45,6 +45,8 @@ public class AdafruitMqttService : BackgroundService
 
         await _mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
 
+        AnnounceMessageArrived += InitializeMessageReceivedHandler;
+        
         Console.WriteLine("AdafruitMqttService initialized successfully.");
     }
 
@@ -52,6 +54,8 @@ public class AdafruitMqttService : BackgroundService
     {
         await base.StopAsync(cancellationToken);
         await _mqttClient.DisconnectAsync();
+        
+        AnnounceMessageArrived -= InitializeMessageReceivedHandler;
     }
 
     protected async override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -65,38 +69,36 @@ public class AdafruitMqttService : BackgroundService
                 continue;
             }
 
-            using (var scope = _serviceScopeFactory.CreateScope())
+            using var scope = _serviceScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
+
+            var averagedLightValue = _accumulatedPlantDataLogs.Average(log => log.AveragedLightValue);
+            var averagedTemperatureValue = _accumulatedPlantDataLogs.Average(log => log.AveragedTemperatureValue);
+            var averagedMoistureValue = _accumulatedPlantDataLogs.Average(log => log.AveragedMoistureValue);
+
+            PublishMessage(_helperService.LightTopicPath, averagedLightValue.ToString("0.00"));
+            PublishMessage(_helperService.TemperatureTopicPath, averagedTemperatureValue.ToString("0.00"));
+            PublishMessage(_helperService.MoistureTopicPath, averagedMoistureValue.ToString("0.00"));
+
+            foreach (var accumulatedPlantDataLog in _accumulatedPlantDataLogs)
             {
-                var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
+                var ownerPlant = dbContext.PlantInformations.FirstOrDefault(info => info.Id == accumulatedPlantDataLog.PlantId);
+                if (ownerPlant == null) continue;
 
-                var averagedLightValue = _accumulatedPlantDataLogs.Average(log => log.AveragedLightValue);
-                var averagedTemperatureValue = _accumulatedPlantDataLogs.Average(log => log.AveragedTemperatureValue);
-                var averagedMoistureValue = _accumulatedPlantDataLogs.Average(log => log.AveragedMoistureValue);
-
-                PublishMessage(_helperService.LightTopicPath, averagedLightValue.ToString("0.00"));
-                PublishMessage(_helperService.TemperatureTopicPath, averagedTemperatureValue.ToString("0.00"));
-                PublishMessage(_helperService.MoistureTopicPath, averagedMoistureValue.ToString("0.00"));
-
-                foreach (var accumulatedPlantDataLog in _accumulatedPlantDataLogs)
+                dbContext.PlantDataLogs.Add(new PlantDataLog()
                 {
-                    var ownerPlant = dbContext.PlantInformations.FirstOrDefault(info => info.Id == accumulatedPlantDataLog.PlantId);
-                    if (ownerPlant == null) continue;
-
-                    dbContext.PlantDataLogs.Add(new PlantDataLog()
-                    {
-                        Timestamp = DateTime.UtcNow,
-                        LightValue = accumulatedPlantDataLog.AveragedLightValue,
-                        TemperatureValue = accumulatedPlantDataLog.AveragedTemperatureValue,
-                        MoistureValue = accumulatedPlantDataLog.AveragedMoistureValue,
-                        LoggedPlant = ownerPlant,
-                    });
-                }
-
-                await dbContext.SaveChangesAsync(stoppingToken);
-
-                _accumulatedPlantDataLogs = new();
-                _accumulatorStartTimeString = DateTime.UtcNow.ToString();
+                    Timestamp = DateTime.UtcNow,
+                    LightValue = accumulatedPlantDataLog.AveragedLightValue,
+                    TemperatureValue = accumulatedPlantDataLog.AveragedTemperatureValue,
+                    MoistureValue = accumulatedPlantDataLog.AveragedMoistureValue,
+                    LoggedPlant = ownerPlant,
+                });
             }
+
+            await dbContext.SaveChangesAsync(stoppingToken);
+
+            _accumulatedPlantDataLogs = new();
+            _accumulatorStartTimeString = DateTime.UtcNow.ToString();
         }
     }
 
@@ -112,20 +114,31 @@ public class AdafruitMqttService : BackgroundService
         Console.WriteLine("From topic: " + args.ApplicationMessage.Topic);
 
         if (args.ApplicationMessage.Topic.Contains(_settings.AdafruitAnnounceFeedName))
-            AnnounceMessageReceivedHandler(decodedMessage);
+            OnAnnounceMessageReceived(decodedMessage);
         else if (args.ApplicationMessage.Topic.Contains(_settings.AdafruitSensorFeedName))
-            SensorMessageReceivedHandler(decodedMessage);
+            OnSensorMessageReceived(decodedMessage);
 
         Console.WriteLine("Message received: " + decodedMessage);
         return Task.CompletedTask;
     }
 
-    private void AnnounceMessageReceivedHandler(string content)
+    private void OnAnnounceMessageReceived(string content)
     {
         AnnounceMessageArrived?.Invoke(content);
     }
 
-    private void SensorMessageReceivedHandler(string content)
+    private void InitializeMessageReceivedHandler(string content)
+    {
+        if (content == "0;I")
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
+            int plantCount = dbContext.PlantInformations.Count();
+            PublishMessage(_helperService.AnnounceTopicPath, plantCount + ";ID");
+        }
+    }
+
+    private void OnSensorMessageReceived(string content)
     {
         AccumulateNewValues(content);
     }
