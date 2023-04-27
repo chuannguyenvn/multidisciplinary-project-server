@@ -52,7 +52,7 @@ public class PlantManagementService : IPlantManagementService
         {
             Name = name,
             CreatedDate = DateTime.Today,
-            RecognizerCode = "Test",
+            RecognizerCode = _helperService.GenerateRecognizerCode(newPlantId),
             WateringRuleRepeats = "",
             WateringRuleMetrics = "",
             Owner = _dbContext.Users.First(u => u.Id == userId),

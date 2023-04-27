@@ -118,4 +118,28 @@ public class HelperService
         var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
         return dbContext.PlantDataLogs.Any(log => log.LoggedPlant.Id == plantId);
     }
+
+    public string GenerateRecognizerCode(int plantId)
+    {
+        Dictionary<int, char> translator = new()
+        {
+            {0, 'R'},
+            {1, 'G'},
+            {2, 'B'},
+            {3, 'C'},
+            {4, 'Y'},
+            {5, 'M'},
+        };
+
+        string code = "";
+
+        Random random = new Random(plantId);
+        
+        for (int i = 0; i < 16; i++)
+        {
+            code += translator[random.Next() % 6];
+        }
+
+        return code;
+    }
 }
