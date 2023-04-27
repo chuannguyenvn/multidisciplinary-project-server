@@ -63,15 +63,30 @@ public class PlantDataService : IPlantDataService
         if (!_helperService.DoesPlantIdExist(plantId)) return (false, "Plant ID does not exist.");
         if (!_helperService.DoesUserOwnThisPlant(user, plantId)) return (false, "The current user does not own this plant.");
         if (!_helperService.DoesPlantHaveAnyDataLog(plantId)) return (false, "Plant does not have any log.");
-        
+
         var dataLogs = _dbContext.PlantDataLogs.Where(log => log.LoggedPlant.Id == plantId && log.Timestamp > DateTime.UtcNow.AddHours(-1)).OrderByDescending(log => log.Timestamp);
         var waterLogs = _dbContext.PlantWaterLogs.Where(log => log.LoggedPlant.Id == plantId && log.Timestamp > DateTime.UtcNow.AddHours(-1)).OrderByDescending(log => log.Timestamp);
 
-        var plantDataPoints = dataLogs.Select(log => new PlantDataPoint()
+        var rawStartTimestamp = DateTime.UtcNow.AddHours(-1);
+        var startTimestamp = new DateTime(rawStartTimestamp.Year, rawStartTimestamp.Month, rawStartTimestamp.Day, rawStartTimestamp.Hour, rawStartTimestamp.Minute, 0, rawStartTimestamp.Kind);
+        List<PlantDataPoint> plantDataPoints = new();
+        for (DateTime minute = startTimestamp; minute < DateTime.UtcNow; minute = minute.AddMinutes(1))
+        {
+            var start = minute;
+            var end = minute.AddMinutes(1) > DateTime.UtcNow ? DateTime.UtcNow : minute.AddMinutes(1);
+            var dataInTimespan = dataLogs.Where(log => log.Timestamp > start && log.Timestamp < end);
+            if (!dataInTimespan.Any()) continue;
+            float averageLightValue = dataInTimespan.Average(log => log.LightValue);
+            float averageTemperatureValue = dataInTimespan.Average(log => log.TemperatureValue);
+            float averageMoistureValue = dataInTimespan.Average(log => log.MoistureValue);
+            plantDataPoints.Add(new PlantDataPoint()
             {
-                Timestamp = log.Timestamp, LightValue = log.LightValue, TemperatureValue = log.TemperatureValue, MoistureValue = log.MoistureValue,
-            })
-            .ToList();
+                Timestamp = start,
+                LightValue = averageLightValue,
+                TemperatureValue = averageTemperatureValue,
+                MoistureValue = averageMoistureValue,
+            });
+        }
 
         var plantWaterPoints = waterLogs.Select(log => new PlantWaterPoint()
             {
@@ -87,15 +102,30 @@ public class PlantDataService : IPlantDataService
         if (!_helperService.DoesPlantIdExist(plantId)) return (false, "Plant ID does not exist.");
         if (!_helperService.DoesUserOwnThisPlant(user, plantId)) return (false, "The current user does not own this plant.");
         if (!_helperService.DoesPlantHaveAnyDataLog(plantId)) return (false, "Plant does not have any log.");
-        
+
         var dataLogs = _dbContext.PlantDataLogs.Where(log => log.LoggedPlant.Id == plantId && log.Timestamp > DateTime.UtcNow.AddHours(-24)).OrderByDescending(log => log.Timestamp);
         var waterLogs = _dbContext.PlantWaterLogs.Where(log => log.LoggedPlant.Id == plantId && log.Timestamp > DateTime.UtcNow.AddHours(-24)).OrderByDescending(log => log.Timestamp);
 
-        var plantDataPoints = dataLogs.Select(log => new PlantDataPoint()
+        var rawStartTimestamp = DateTime.UtcNow.AddHours(-24);
+        var startTimestamp = new DateTime(rawStartTimestamp.Year, rawStartTimestamp.Month, rawStartTimestamp.Day, rawStartTimestamp.Hour, 0, 0, rawStartTimestamp.Kind);
+        List<PlantDataPoint> plantDataPoints = new();
+        for (DateTime hour = startTimestamp; hour < DateTime.UtcNow; hour = hour.AddHours(1))
+        {
+            var start = hour;
+            var end = hour.AddHours(1) > DateTime.UtcNow ? DateTime.UtcNow : hour.AddHours(1);
+            var dataInTimespan = dataLogs.Where(log => log.Timestamp > start && log.Timestamp < end);
+            if (!dataInTimespan.Any()) continue;
+            float averageLightValue = dataInTimespan.Average(log => log.LightValue);
+            float averageTemperatureValue = dataInTimespan.Average(log => log.TemperatureValue);
+            float averageMoistureValue = dataInTimespan.Average(log => log.MoistureValue);
+            plantDataPoints.Add(new PlantDataPoint()
             {
-                Timestamp = log.Timestamp, LightValue = log.LightValue, TemperatureValue = log.TemperatureValue, MoistureValue = log.MoistureValue,
-            })
-            .ToList();
+                Timestamp = start,
+                LightValue = averageLightValue,
+                TemperatureValue = averageTemperatureValue,
+                MoistureValue = averageMoistureValue,
+            });
+        }
 
         var plantWaterPoints = waterLogs.Select(log => new PlantWaterPoint()
             {
