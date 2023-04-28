@@ -5,7 +5,7 @@ namespace Server.Services;
 
 public class WateringService : BackgroundService
 {
-    private const float WATERING_RULES_EVALUATION_TIMER = 5f;
+    private const float WATERING_RULES_EVALUATION_TIMER = 30f;
     private const float WATERING_COOLDOWN = 60f;
 
     private readonly IServiceScopeFactory _serviceScopeFactory;

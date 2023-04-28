@@ -7,7 +7,7 @@ using Server.Services;
 
 public class AdafruitMqttService : BackgroundService
 {
-    private const float SEND_DATA_BACK_TIMER = 60f;
+    private const float SEND_DATA_BACK_TIMER = 120f;
 
     public event Action<string> AnnounceMessageArrived; 
 
