@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using Communications.Requests;
 using Communications.Responses;
 using Cronos;
+using Microsoft.EntityFrameworkCore;
 using Server.Models;
 using Server.WateringRules;
 
@@ -77,8 +78,7 @@ public class PlantManagementService : IPlantManagementService
         var message = success ? "Plant removed." : "Adafruit did not response to the removal request.";
         if (!success) return (false, message);
 
-        var removingPlantInformation = new PlantInformation() {Id = plantId};
-        _dbContext.PlantInformations.Remove(removingPlantInformation);
+        _dbContext.PlantInformations.Remove(_dbContext.PlantInformations.Single(info => info.Id == plantId));
         _dbContext.SaveChanges();
 
         return (true, message);
