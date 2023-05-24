@@ -71,7 +71,7 @@ public class PlantManagementService : IPlantManagementService
         if (!_helperService.DoesUserOwnThisPlant(user, plantId)) return (false, "The current user does not own this plant.");
 
         List<PlantInformation> plantInformationList = _dbContext.PlantInformations.OrderBy(info => info.Id).ToList();
-        int plantOrder = plantInformationList.FindIndex(info => info.Id == plantId);
+        int plantOrder = plantInformationList.FindIndex(info => info.Id == plantId) + 1;
         
         _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructRemovePlantRequestMessage(plantOrder));
         var success = await TryWaitForAnnounceMessage(_helperService.ConstructRemovePlantResponseMessage(plantOrder));
@@ -141,9 +141,12 @@ public class PlantManagementService : IPlantManagementService
         var success = await TryWaterPlant(plantId);
         return success ? (true, "Plant watered.") : (false, "Adafruit did not response to watering request.");
     }
-
-    public async Task<bool> TryWaterPlant(int plantOrder)
+ 
+    public async Task<bool> TryWaterPlant(int plantId)
     {
+        List<PlantInformation> plantInformationList = _dbContext.PlantInformations.OrderBy(info => info.Id).ToList();
+        int plantOrder = plantInformationList.FindIndex(info => info.Id == plantId) + 1;
+        
         _adafruitMqttService.PublishMessage(_helperService.AnnounceTopicPath, _helperService.ConstructWaterPlantRequestMessage(plantOrder));
         var success = await TryWaitForAnnounceMessage(_helperService.ConstructWaterPlantResponseMessage(plantOrder));
         if (!success) return false;
@@ -151,12 +154,12 @@ public class PlantManagementService : IPlantManagementService
         var plantWaterLog = new PlantWaterLog()
         {
             Timestamp = DateTime.UtcNow,
-            LoggedPlant = _dbContext.PlantInformations.First(info => info.Id == plantOrder),
+            LoggedPlant = _dbContext.PlantInformations.First(info => info.Id == plantId),
             IsManual = true,
         };
 
         _dbContext.PlantWaterLogs.Add(plantWaterLog);
-        await _dbContext.SaveChangesAsync();
+        _dbContext.SaveChanges();
         return true;
     }
 
